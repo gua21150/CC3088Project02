@@ -1,35 +1,32 @@
 # importacion de librerías
-from function_validation import *
-from menus import *
-from gestion_trabajador import *
 
+from Control.function_validation import *
+from Control.menus import *
+from Control.control_usuario import *
 
-# credenciales de la base de datos
-# host, dbname, user, password = credenciales()
-conexion = conect_db('localhost', 'proyecto02', 'postgres', 'moon!9920!2')
- 
+conn = conect_db()  # se conecta a la base de datos
 print("---------------")  
 print("Bienvenido a iHealth+")
-conexion.close()
-try:               
+try:   
+
     menu_login()
     option = int(input("Ingrese su opción: "))
 
-    while(option != 0):
-        if option == 1: # iniciar sesion
-            menu_iniciar_sesion() # llamada al menu 
+    while option != 0:
+        if option == 1:  # iniciar sesion
+            menu_iniciar_sesion()  # llamada al menu
             option2 = int(input("Ingrese su selección: "))
 
-            if option2 == 1: # iniciar sesion como usuario             
+            if option2 == 1:  # iniciar sesion como usuario
                 nick, passw = credencial_login()
-                if validar_usuario(1, nick, passw):
-                    print("perro")                   
+                if validar_usuario(conn, 1, nick, passw):
+                    registrar_peso(conn,nick,passw)
             elif option2 == 2:
                 # iniciar sesion como trabajador
                 correo, passw = credencial_login_trabajador()
-                if validar_usuario(2, correo, passw):
+                if validar_usuario(conn, 2, correo, passw):
                     print("gato")    
-        elif option == 2: # registrar usuario
+        elif option == 2:  # registrar usuario
             cant = int(input("Ingrese la cantidad de numeros aleatorios que desea obtener: "))
             
         menu_login()
@@ -37,4 +34,6 @@ try:
     
     print("Feliz día")    
 except:
-    print("Su entrada no es válida, feliz día")    
+    print("Su entrada no es válida, feliz día") 
+finally:
+    conn.close()
