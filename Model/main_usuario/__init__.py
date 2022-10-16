@@ -1,10 +1,17 @@
 """"
     Este modulo es exclusivo para las operaciones que debe de realizar un usuario iHealth+
 """
-class Usuario():
+
+from Control.function_validation import *
+
+class Usuario:
+
     def __init__(self, id):
         self.id = id
-    
+
+    def get_id(self):
+        return self.id
+
     # https://www.w3schools.com/python/python_classes.asp
     # https://www.psycopg.org/docs/cursor.html#cursor.fetchone
     # https://www.tutorialspoint.com/postgresql/postgresql_python.htm
