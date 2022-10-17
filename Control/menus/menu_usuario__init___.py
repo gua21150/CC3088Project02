@@ -1,5 +1,6 @@
 from Control.control_usuario import *
-from Control.menus import create_pandas_table
+from Control.validation_request import create_pandas_table
+
 def acciones_usuario_suscrito_oro():
     print("\t¿Qué deseas hacer hoy?")
     print("\t\t[1] Buscar sesión y agendarme")
@@ -30,6 +31,7 @@ def acciones_usuario_no_suscrito():
     print("\t\t[1] Registrar metodo de pago")
     print("\t\t[2] Elegir plan de ejercicio y cancelar")
     print("\t\t[3] Salir")
+
 
 def accion_usuario_no_suscrito(conn, id):
     se_suscribio = False

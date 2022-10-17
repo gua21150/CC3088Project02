@@ -1,5 +1,5 @@
 from datetime import date
-from Control.function_validation import solicitar_fecha
+from Control.validation_request import solicitar_fecha
 
 """recupera el id del usuario con el que se estara trabajando"""
 def recuperar_id_usuario(conn, usern, passw):
@@ -176,17 +176,16 @@ def registro_metodo_pago(conn, id):
         insert_values = (id, cod_tarjeta)
         cursor.execute(insert_script, insert_values)
         conn.commit()
-        cursor.close()
 
 
 """ registrar suscripcion """
 def registrar_suscripcion(conn, id, tipo):
     print("Tu fecha de inicio se registrara como el día actual en tu dispositivo")
     cursor = conn.conect()
-    insert_script = "INSERT INTO usuario_suscripcion(id_usuario, id_suscripcion, activo, fecha_inicio) VALUES(%s,%s,%s,%s)"
+    insert_script = "INSERT INTO usuario_suscripcion(id_usuario, id_suscripcion, activo, fecha_inicio) "\
+                    "VALUES(%s,%s,%s,%s)"
     insert_values = (id, tipo, True, str(date.today()))
     cursor.execute(insert_script, insert_values)
     conn.commit()
     # falta arreglar metodo de pago y pago
     print("Se ha suscrito con exito")
-    cursor.close()

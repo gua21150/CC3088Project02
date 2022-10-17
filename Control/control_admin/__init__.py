@@ -1,4 +1,4 @@
-from Control.function_validation import solicitar_fecha, create_pandas_table
+from Control.validation_request import solicitar_fecha, create_pandas_table
 
 """ REPORTERIA """
 """El top 10 de sesiones que más usuarios tuvieron. """
