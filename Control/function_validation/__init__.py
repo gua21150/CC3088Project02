@@ -1,6 +1,7 @@
 import psycopg2
 from calendar import monthrange
 from datetime import date
+import pandas as pd
 
 # conectar a base de datos
 from config import config
@@ -47,11 +48,11 @@ def recuperar_id_trabajador(conn, correo, passw):
 
 def solicitar_fecha(argumento):
     bandier = False
-    anio = 0
-    mes = 0
-    dia = 0
+    anio = ""
+    mes = ""
+    dia = ""
     dat = ""
-    while bandier:
+    while bandier is False:
         dat = input("Ingrese el año '%s' " % argumento)
         try:
             anio = int(dat)
@@ -64,7 +65,7 @@ def solicitar_fecha(argumento):
             dat = input("Ingrese el año '%s', debe de estar entre 1950 a 2022 " % argumento)
 
     bandier = False
-    while bandier:
+    while bandier is False:
         dat = input("Ingrese el mes '%s' " % argumento)
         try:
             mes = int(dat)
@@ -77,7 +78,7 @@ def solicitar_fecha(argumento):
             dat = input("Ingrese el mes '%s', debe de estar entre 1 a 12 " % argumento)
 
     bandier = False
-    while bandier:
+    while bandier is False:
         dat = input("Ingrese el dia '%s' " % argumento)
         try:
             dia = int(dat)
@@ -89,3 +90,9 @@ def solicitar_fecha(argumento):
         else:
             dat = input("Ingrese el dia '%s', el mes '%s' tiene rango de dias entre 1 a '%s' " % (argumento, mes, dias_aceptados))
     return date(anio, mes, dia)
+
+
+def create_pandas_table(sql_query, conn):
+    database = conn
+    table = pd.read_sql_query(sql_query, database)
+    return table

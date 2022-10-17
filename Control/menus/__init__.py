@@ -1,3 +1,4 @@
+import pandas as pd
 # menus para todos
 
 
