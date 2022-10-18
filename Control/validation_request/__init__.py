@@ -6,8 +6,6 @@ from config import config
 
 """               REQUEST                      """
 """ CONECTAR A BASE DE DATOS"""
-
-
 def connect_db():
     # conexion a la base de datos
     try:
@@ -116,6 +114,7 @@ def solicitar_hora(argumento):
     bandier = False
     while bandier is False:
         dat = input("Ingrese los minutos '%s' " % argumento)
+        mes = 0
         try:
             mes = int(dat)
         except ValueError:
@@ -169,3 +168,4 @@ def create_pandas_table(sql_query, conn):
     database = conn
     table = pd.read_sql_query(sql_query, database)
     return table
+

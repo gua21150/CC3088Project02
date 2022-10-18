@@ -16,8 +16,6 @@ def iniciar_sesion_admin(conn, usern, passw):
 
 """ REPORTERIA """
 """El top 10 de sesiones que más usuarios tuvieron. """
-
-
 def sesiones_populares(conn):
     query = "SELECT  sin.id_sesion, ce.ejercicio, count(sin.id_sesion) cantidad FROM sincronizacion_ejercicio sin " \
             "INNER JOIN sesion_ejercicio se on se.id_sesion = sin.id_sesion INNER JOIN categoria_ejercicio ce on " \
