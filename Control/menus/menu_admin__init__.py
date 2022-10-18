@@ -54,12 +54,11 @@ def menu_sesiones():
 
 def menu_usuario_admin():
     print("\t\t[1] Dar de baja a usuario \n\t\t\tEsto desactivará el acceso a la aplicación al usuario")
-    print("\t\t[2] Activar a usuario \n\t\t\tEsta acción le permitirá el acceso a la aplicación")
-    print("\t\t[3] Retornar ")
+    print("\t\t[2] Retornar ")
 
     try:
         select = int(input("¿Cuál es tu selección?"))
-        if 1 <= select <= 3:
+        if 1 <= select <= 2:
             return select
         else:
             print("Opción no válida, se cerrará sesión")

@@ -1,5 +1,5 @@
 from datetime import date
-from Control.validation_request import solicitar_fecha, create_pandas_table
+from Control.validation_request import solicitar_fecha, create_pandas_table, connect_db
 
 """ solicitar datos para registrar un nuevo usuario """
 def solicitar_credenciales(conn):
@@ -11,41 +11,41 @@ def solicitar_credenciales(conn):
         apellidos = str(input("¿Cuáles son tus apellidos?"))
         nickname = str(input("¿Cuál es tu username?"))
 
-        while bandier:  # conocer que el nickname no esta tomado
+        while bandier is True:  # conocer que el nickname no esta tomado
             cursor = conn.cursor()
-            result = cursor.execute("SELECT 1 FROM usuario WHERE nickname='%s'" % nickname)
-
-            if str(result) != 'None':
+            cursor.execute("SELECT 1 FROM usuario WHERE nickname='%s'" % nickname)
+            result = cursor.fetchone()
+            if result != 'None':
                 bandier = False
             else:
                 nickname = str((input("Este nombre de usuario ya esta tomado, intenta con otro")))
         bandier = True
         correo = str(input("¿Cuál es tu correo?"))
-        while bandier:  # conocer que el correo no esta registrado
+        while bandier is True:  # conocer que el correo no esta registrado
             cursor = conn.cursor()
-            result = cursor.execute("SELECT 1 FROM usuario WHERE correo='%s'" % correo)
-
-            if str(result) != 'None':
+            cursor.execute("SELECT 1 FROM usuario WHERE correo='%s'" % correo)            
+            result = cursor.fetchone()
+            if result != 'None':
                 bandier = False
             else:
-                correo = str((input("Este correo ya está registrado, intenta con otro")))
+                correo = str((input("Este correo ya está registrado, intenta con otro ")))
 
-        password = str(input("¿Cuál es tu contraseña?"))
-        password2 = str(input("Confirma tu contraseña"))
+        password = str(input("¿Cuál es tu contraseña? "))
+        password2 = str(input("Confirma tu contraseña "))
 
         bandier = True
-        while bandier:
+        while bandier is True:
             if password == password2:
                 bandier = False
             else:
                 print("\tLas contraseñas no coinciden, te las vamos a solicitar nuevamente")
-                password = str(input("¿Cuál es tu contraseña?"))
-                password2 = str(input("Confirma tu contraseña"))
+                password = str(input("¿Cuál es tu contraseña? "))
+                password2 = str(input("Confirma tu contraseña "))
 
-        edad = int(input("¿Cuáles son tus nombres?"))
-        altura = float(input("¿Cuál es tu altura?"))
-        peso = float(input("¿Cuál es tu peso actual?"))
-        calorias = float(input("¿Cuáles son tus calorías actuales?"))
+        edad = int(input("¿Cuál es tu edad? "))
+        altura = float(input("¿Cuál es tu altura? "))
+        peso = float(input("¿Cuál es tu peso actual? "))
+        calorias = float(input("¿Cuáles son tus calorías actuales? "))
 
         return nombres, apellidos, nickname, edad, altura, calorias, peso, correo, password
     except ValueError:
@@ -54,24 +54,22 @@ def solicitar_credenciales(conn):
 
 
 """" registro del usuario dentro de la base de datos, retorna el id del usuario registrado """
-
-
 def registrar_usuario(conn):
     data = solicitar_credenciales(conn)  # solicitar informacion usuario
 
     if data is not False:
         cursor = conn.cursor()  # se conecta a la base de datos
         # realizar nuevo codigo de usuario
-        cursor.execute("SELECT id_usuario FROM usuario ORDER BY id_usuario DESC LIMIT 1;")  # ultimo usuario
-        id_usuario = cursor.fetchone()
-        id_usuario = id_usuario[0]  # de la tupla se recupera el primer valor
-        last_id = id_usuario[0][4:]  # se recupera los ultimos digitos del id
+        cursor.execute("SELECT id_usuario FROM usuario ORDER BY id_usuario DESC LIMIT 1;")  # ultimo usuario        
+        id_sesion = cursor.fetchone()
+        id = id_sesion  # de la tupla se recupera el primer valor
+        last_id = id[0][4:]  # se recupera los ultimos digitos del id
         new_id = int(last_id) + 1  # se aumenta en uno el valor del ultimo id
-        id = id_usuario[0].replace(str(last_id), str(new_id))  # el id correspondiente es este
+        id_u = id_sesion[0].replace(str(last_id), str(new_id))  # el id correspondiente es este
         # insercion de dato
         insert_script = "INSERT INTO usuario(id_usuario, nombres, apellidos, nickname, edad, altura, caloria_actual,peso_actual, correo, passwordc)" \
                         "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-        insert_values = (id, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8])
+        insert_values = (id_u, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8])
         cursor.execute(insert_script, insert_values)
         conn.commit()
         print("Registro realizado")
@@ -80,19 +78,17 @@ def registrar_usuario(conn):
 
 """recupera el id del usuario con el que se estara trabajando, es iniciar sesion,
    se inicia sesion unicamente si el usuario esta activo """
-
-
 def iniciar_sesion_usuario(conn, usern, passw):
     cursor = conn.cursor()
     query = "SELECT usuario.id_usuario, us.id_suscripcion, ((us.fecha_inicio+'1 year'::INTERVAL) - current_date)::VARCHAR " \
             "FROM   usuario INNER JOIN usuario_suscripcion us ON usuario.id_usuario = us.id_usuario " \
-            "WHERE nickname='%s' AND passwordc='%s' AND us.activo=True " \
+            "WHERE nickname=%s AND passwordc=%s AND us.activo=True " \
             "AND now()<=fecha_inicio+'1 year'::INTERVAL " \
             "ORDER BY us.fecha_inicio DESC LIMIT 1;"
     data = (usern, passw)
     cursor.execute(query, data)
     user_data = cursor.fetchone()
-    if user_data is not 'None':
+    if user_data != 'None':
         return user_data
     else:
         return False
@@ -126,6 +122,11 @@ def registrar_peso(conn, id):
         conn.commit()
         print("Se ha registrado tu peso y calorías actuales")
 
+        query ="SELECT id_usuario, peso, caloria, fecha FROM usuario_registro_historico WHERE id_usuario='%s'"\
+               "ORDER BY fecha " %id
+        result = create_pandas_table(query, conn)
+        print(result)
+
 
 """ verifica que el metodo de pago no este ya dentro de la base de datos 
     retorna True cuando el dato no se encuentra y False cuando ya se encuentra """
@@ -133,8 +134,8 @@ def registrar_peso(conn, id):
 
 def validar_metodo_pago(conn, cod_tarjeta):
     cursor = conn.cursor()
-    select_script = "SELECT 1 FROM metodo_pago WHERE cod_tarjeta=%s"
-    cursor.execute(select_script % cod_tarjeta)
+    select_script = "SELECT 1 FROM metodo_pago WHERE cod_tarjeta='%s'" % cod_tarjeta
+    cursor.execute(select_script)
     value = cursor.fetchone()
 
     if value == 'None':  # no hay tarjetas con este codigo
@@ -179,10 +180,11 @@ def registro_metodo_pago(conn):
     cod_tarjeta = 0
     if data is not False:
         cursor = conn.cursor()
-        insert_script = "INSERT INTO metodo_pago(cod_tarjeta, nombre_tarjeta, fecha_caducidad, cvv, tipo_tarjeta) VALUES(%s, %s,%s,%s,%s)"
+        insert_script = "INSERT INTO metodo_pago(cod_tarjeta, nombre_tarjeta, fecha_caducidad, cvv, tipo_tarjeta) VALUES('%s', '%s','%s','%s','%s')"
         insert_values = data
         cursor.execute(insert_script, insert_values)
         conn.commit()
+        print("Se ha registrado este metodo de pago")
 
 
 """ muestra los planes disponibles para el usuario. 
@@ -224,7 +226,8 @@ def registrar_suscripcion(conn, id, tipo):
 
     cursor.execute(plan_anterior)  # se desactiva el plan anterior en caso que exista
     conn.commit()
-
+    conn = connect_db()
+    cursor = conn.cursor()
     insert_script = "INSERT INTO usuario_suscripcion(id_usuario, id_suscripcion, activo, fecha_inicio) " \
                     "VALUES(%s,%s,%s,%s)"
     insert_values = (id, tipo, True, str(date.today()))
@@ -282,11 +285,13 @@ def realizar_pago_suscripcion(conn, id_usuario):
 """ funcion usada por usuario admin para poder desactivar un usuario """
 def desactivar_usuario(conn, id_usuario):
     cursor = conn.cursor()
-    query = "UPDATE usuario_suscripcion SET activo = False WHERE  id_usuario = %s"
+    query = "UPDATE usuario_suscripcion SET activo = False WHERE id_usuario = %s"
     cursor.execute(query, id_usuario)
     conn.commit()
+    conn = connect_db()
+    cursor = conn.cursor()
     print("El usuario ha sido DESACTIVADO, se procedera ha ELIMINAR su informacion de pago")
-    query = "delete from pago where id_usuario='%s'"
+    query = "delete from pago where id_usuario=%s"
     cursor.execute(query, id_usuario)
     conn.commit()
     print("Informacion de pago ELIMINADA correctamente")

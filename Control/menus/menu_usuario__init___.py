@@ -11,6 +11,16 @@ def acciones_usuario_suscrito_oro():
     print("\t\t[6] Registro y consulta de mi peso semanal")
     print("\t\t[7] Cerrar sesión")
 
+    try:
+        select = int(input("¿Cuál es tu selección?"))
+        if 1 <= select <= 7:
+            return select
+        else:
+            print("Opción no válida, se cerrará sesión")
+            return False
+    except ValueError:
+        print("Opción no válida, se cerrará sesión")
+        return False
 
 def acciones_usuario_suscrito_diamante():
     print("\t¿Qué deseas hacer hoy?")
@@ -23,41 +33,14 @@ def acciones_usuario_suscrito_diamante():
     print("\t\t[7] Registro y consulta de mi peso semanal")
     print("\t\t[8] Cerrar sesión")
 
-
-def acciones_usuario_no_suscrito():
-    print("\t¿Qué deseas hacer hoy?")
-    print("\t\t[1] Registrar metodo de pago, \n\t\tElegir plan de suscripción y cancelar")
-    print("\t\t[2] Salir")
-
-
-def accion_usuario_no_suscrito(conn, id):
-    se_suscribio = False
-    acciones_usuario_no_suscrito()  # llamada del menu
-    option = int(input("Ingrese su opción: "))
-
-    while option != 0:
-        if option == 1:  # registrar metodo de pago
-            registro_metodo_pago(conn, id)
-        elif option == 2:  # elegir plan de ejercicio y cancelar
-            print("\tEstos son los planes que te ofrecemos ")
-            query = "SELECT tipo, precio FROM suscripcion;"
-            planes_info = create_pandas_table(query, conn)
-            print(planes_info)
-            print("En diamante tendrás un IHealthWatch+ de regalo y una sesión mensual con nutricionista")
-            print("En oro tendrás un IHealthWatch+ de alquiler")
-            print("\t¿Te gustaría obtener un plan de ejercicio?")
-            try:
-                respuesta = int(input("\t\t[1]Sí\n\t\t[2]No"))
-                if respuesta == 1:
-                    plan = int(input("\t\t¿Cuál te gustaría obtener?\n\t\t[1]Diamante\n\t\t[2]Oro"))
-
-            except ValueError:
-                print("Su respuesta no es valida, se le mostrara el menu")
-
-            acciones_usuario_no_suscrito()
-            option = int(input("Ingrese su opción: "))
-
-            print("Feliz día")
-
-
+    try:
+        select = int(input("¿Cuál es tu selección?"))
+        if 1 <= select <= 8:
+            return select
+        else:
+            print("Opción no válida, se cerrará sesión")
+            return False
+    except ValueError:
+        print("Opción no válida, se cerrará sesión")
+        return False
 

@@ -10,12 +10,11 @@ def solicitar_credenciales(conn):
         correo = str(input("¿Cuál es su correo?"))
 
         bandier = True
-        correo = str(input("¿Cuál es tu correo?"))
-        while bandier:  # conocer que el correo no esta registrado
+        while bandier is True:  # conocer que el correo no esta registrado
             cursor = conn.cursor()
-            result = cursor.execute("SELECT 1 FROM trabajador WHERE correo='%s'" % correo)
-
-            if str(result) != 'None':
+            cursor.execute("SELECT 1 FROM trabajador WHERE correo='%s'" % correo)
+            result = cursor.fetchone()
+            if result != 'None':
                 bandier = False
             else:
                 correo = str((input("Este correo ya está registrado, intenta con otro")))
@@ -24,7 +23,7 @@ def solicitar_credenciales(conn):
         password2 = str(input("Confirma tu contraseña"))
 
         bandier = True
-        while bandier:
+        while bandier is True:
             if password == password2:
                 bandier = False
             else:
@@ -47,28 +46,28 @@ def registrar_entrenador(conn):
         # realizar nuevo codigo de usuario
         cursor.execute("SELECT id FROM trabajador ORDER BY id DESC LIMIT 1;")  # ultimo trabajador registrado
         id_trab = cursor.fetchone()
-        id_trab = id_trab[0]  # de la tupla se recupera el primer valor
-        last_id = id_trab[0][4:]  # se recupera los ultimos digitos del id
-        new_id = int(last_id)+1    # se aumenta en uno el valor del ultimo id
-        id = id_trab[0].replace(str(last_id), str(new_id))  # el id correspondiente es este
+        id = id_trab  # de la tupla se recupera el primer valor
+        last_id = id[0][4:]  # se recupera los ultimos digitos del id
+        new_id = int(last_id) + 1  # se aumenta en uno el valor del ultimo id
+        id_t = id_trab[0].replace(str(last_id), str(new_id))  # el id correspondiente es este
         # insercion de dato
         insert_script = "INSERT INTO trabajador(id, nombres, apellidos, correo, passwordc, activo, rol) "\
                         "VALUES(%s,%s,%s,%s,%s,%s,%s)"
-        insert_values = (id, data[0], data[1], data[2], data[3], data[4], data[5])
+        insert_values = (id_t, data[0], data[1], data[2], data[3], data[4], data[5])
         cursor.execute(insert_script, insert_values)
         conn.commit()
         print("Registro realizado\nSe mostraran los entrenadores")
-        mostrar_entrenadores()
+        mostrar_entrenadores(conn)
 
 
 """ Desactiva al entrenador indicado """
 def dar_baja_entrenador(conn, id_trabajador):
     cursor = conn.cursor()
-    query = "UPDATE trabajador set activo = False where id = '%s'"
-    cursor.execute(query, id_trabajador)
+    query = "UPDATE trabajador set activo = False where id = '%s'" %id_trabajador
+    cursor.execute(query)
     conn.commit()
     print("Se ha desactivado al entrenador\nA continuación puede ver el cambio")
-    mostrar_entrenadores()
+    mostrar_entrenadores(conn)
 
 
 """ Muestra los entrenadores que están dentro de la base de datos"""

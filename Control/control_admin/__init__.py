@@ -1,14 +1,14 @@
-from Control.validation_request import solicitar_fecha, create_pandas_table
+from Control.validation_request import solicitar_fecha, create_pandas_table, connect_db
 
 def iniciar_sesion_admin(conn, usern, passw):
     cursor = conn.cursor()
     query = "SELECT trabajador.id "\
             "FROM trabajador "\
-            "WHERE correo = '%s' AND passwordc='%s' AND activo = True AND rol='IDR_AD'; "
+            "WHERE correo =%s AND passwordc=%s AND activo = True AND rol='IDR_AD'"
     data = (usern, passw)
     cursor.execute(query, data)
     user_data = cursor.fetchone()
-    if user_data is not 'None':
+    if user_data != 'None':
         return True
     else:
         return False
@@ -37,12 +37,12 @@ def sesiones_fecha(conn):
 
     result = create_pandas_table(query, conn)
     print(result)
-
+    conn = connect_db()
     print("\t\tTotal de usuarios en las categorias de fechas entre %s y %s" % (fecha_inicio, fecha_fin))
     query = "select ejercicio, count(sinc.id_usuario) " \
             "from categoria_ejercicio cat inner join sesion_ejercicio ses on cat.id_categoria = ses.categoria " \
             "inner join sincronizacion_ejercicio sinc on ses.id_sesion = sinc.id_sesion "\
-            "where ses.fecha between between '%s' and '%s' " \
+            "where ses.fecha between '%s' and '%s' " \
             "group by ejercicio;" % (fecha_inicio, fecha_fin)
     result = create_pandas_table(query, conn)
     print(result)
@@ -73,11 +73,12 @@ def cuentas_diamante(conn):
 
 """ Para una fecha específica, ¿cuál es la hora pico donde el servicio es más utilizado? """
 def hora_pico(conn):
+    fecha = solicitar_fecha("fecha de busqueda ")
     query = "SELECT se.hora_inicio, COUNT(sin.id_usuario) total_personas, se.hora_fin, COUNT(sin.id_usuario) total_personas "\
             "FROM sincronizacion_ejercicio sin INNER JOIN sesion_ejercicio se ON se.id_sesion = sin.id_sesion "\
             "WHERE se.fecha = '%s' "\
             "GROUP BY se.hora_inicio, se.hora_fin "\
-            "ORDER BY total_personas DESC LIMIT 3;"
+            "ORDER BY total_personas DESC LIMIT 3;" %fecha
 
     result = create_pandas_table(query, conn)
     print(result)
