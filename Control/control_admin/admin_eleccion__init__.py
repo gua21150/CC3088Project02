@@ -280,6 +280,8 @@ def realizar_pago_suscripcion(conn, id_usuario):
 
 
 """ funcion usada por usuario admin para poder desactivar un usuario """
+
+
 def desactivar_usuario(conn, id_usuario):
     cursor = conn.cursor()
     query = "UPDATE usuario_suscripcion SET activo = False WHERE  id_usuario = %s"
@@ -291,13 +293,3 @@ def desactivar_usuario(conn, id_usuario):
     conn.commit()
     print("Informacion de pago ELIMINADA correctamente")
     print("Se ha actualizado el estado de este usuario")
-
-
-""" mostrar informacion basica de los usuarios """
-def mostrar_usuarios(conn):
-    query = "SELECT us.id_usuario, us.nombres, us.apellidos, us.nickname, sus.tipo, u.activo, u.fecha_inicio " \
-            "FROM usuario us INNER JOIN usuario_suscripcion u on us.id_usuario = u.id_usuario " \
-            "INNER JOIN suscripcion sus ON sus.id_suscripcion = u.id_suscripcion "\
-            "WHERE u.activo = True ORDER BY sus.tipo, u.activo, u.fecha_inicio;"
-    result = create_pandas_table(query, conn)
-    print(result)

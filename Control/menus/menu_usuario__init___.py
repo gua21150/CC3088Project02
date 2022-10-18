@@ -4,33 +4,30 @@ from Control.validation_request import create_pandas_table
 def acciones_usuario_suscrito_oro():
     print("\t¿Qué deseas hacer hoy?")
     print("\t\t[1] Buscar sesión y agendarme")
-    print("\t\t[2] Unirme a sesion de ejercicio")
-    print("\t\t[3] Consultar sesiones semanales")
-    print("\t\t[4] Consultar sesiones pasadas")
-    print("\t\t[5] Cambiar plan de ejercicio y cancelar")
-    print("\t\t[6] Consultar mi progreso en sesiones")
-    print("\t\t[7] Registro y consulta de mi peso semanal")
-    print("\t\t[8] Cerrar sesion")
+    print("\t\t[2] Unirme a sesión de ejercicio")
+    print("\t\t[3] Consultar sesiones semanales y pasadas")
+    print("\t\t[4] Cambiar plan de suscripción y cancelar")
+    print("\t\t[5] Consultar mi progreso en sesiones")
+    print("\t\t[6] Registro y consulta de mi peso semanal")
+    print("\t\t[7] Cerrar sesión")
 
 
 def acciones_usuario_suscrito_diamante():
     print("\t¿Qué deseas hacer hoy?")
     print("\t\t[1] Buscar sesión y agendarme")
-    print("\t\t[2] Unirme a sesion de ejercicio")
-    print("\t\t[3] Unirme a sesion de nutricionista")
-    print("\t\t[4] Consultar sesiones semanales")
-    print("\t\t[5] Consultar sesiones pasadas")
-    print("\t\t[6] Cambiar plan de ejercicio y cancelar")
-    print("\t\t[7] Consultar mi progreso en sesiones")
-    print("\t\t[8] Registro y consulta de mi peso semanal")
-    print("\t\t[9] Cerrar sesion")
+    print("\t\t[2] Unirme a sesión de ejercicio")
+    print("\t\t[3] Unirme a sesión de nutricionista")
+    print("\t\t[4] Consultar sesiones semanales y pasadas")
+    print("\t\t[5] Cambiar plan de suscripción y cancelar")
+    print("\t\t[6] Consultar mi progreso en sesiones")
+    print("\t\t[7] Registro y consulta de mi peso semanal")
+    print("\t\t[8] Cerrar sesión")
 
 
 def acciones_usuario_no_suscrito():
     print("\t¿Qué deseas hacer hoy?")
-    print("\t\t[1] Registrar metodo de pago")
-    print("\t\t[2] Elegir plan de ejercicio y cancelar")
-    print("\t\t[3] Salir")
+    print("\t\t[1] Registrar metodo de pago, \n\t\tElegir plan de suscripción y cancelar")
+    print("\t\t[2] Salir")
 
 
 def accion_usuario_no_suscrito(conn, id):
@@ -45,6 +42,7 @@ def accion_usuario_no_suscrito(conn, id):
             print("\tEstos son los planes que te ofrecemos ")
             query = "SELECT tipo, precio FROM suscripcion;"
             planes_info = create_pandas_table(query, conn)
+            print(planes_info)
             print("En diamante tendrás un IHealthWatch+ de regalo y una sesión mensual con nutricionista")
             print("En oro tendrás un IHealthWatch+ de alquiler")
             print("\t¿Te gustaría obtener un plan de ejercicio?")
@@ -55,8 +53,6 @@ def accion_usuario_no_suscrito(conn, id):
 
             except ValueError:
                 print("Su respuesta no es valida, se le mostrara el menu")
-
-
 
             acciones_usuario_no_suscrito()
             option = int(input("Ingrese su opción: "))

@@ -168,3 +168,4 @@ def create_pandas_table(sql_query, conn):
     database = conn
     table = pd.read_sql_query(sql_query, database)
     return table
+
