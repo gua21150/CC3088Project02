@@ -38,29 +38,41 @@ def registrar_sesion(conn):
     if data is not False:
         cursor = conn.cursor()  # se conecta a la base de datos
         # realizar nuevo codigo de usuario
-        cursor.execute("SELECT id FROM trabajador ORDER BY id DESC LIMIT 1;")  # ultimo trabajador registrado
+        cursor.execute("SELECT id_sesion FROM sesion_ejercicio ORDER BY id_sesion DESC LIMIT 1;")  # ultimo trabajador registrado
         id_sesion = cursor.fetchone()
-        id_sesion = id_sesion[0]  # de la tupla se recupera el primer valor
-        last_id = id_sesion[0][4:]  # se recupera los ultimos digitos del id
+        id = id_sesion  # de la tupla se recupera el primer valor
+        last_id = id[0][5:]  # se recupera los ultimos digitos del id
         new_id = int(last_id) + 1  # se aumenta en uno el valor del ultimo id
-        id = id_sesion[0].replace(str(last_id), str(new_id))  # el id correspondiente es este
+        id_u = id_sesion[0].replace(str(last_id), str(new_id))
         # insercion de dato
         insert_script = "INSERT INTO sesion_ejercicio(id_sesion, fecha, hora_inicio, hora_fin, duracion, instructor, categoria) " \
                         "VALUES(%s,%s,%s,%s,%s,%s,%s)"
-        insert_values = (id, data[0], data[1], data[2], data[3], data[4], data[5])
+        insert_values = (id_u, data[0], data[1], data[2], data[3], data[4], data[5])
         cursor.execute(insert_script, insert_values)
         conn.commit()
         print("Registro realizado\nSe mostraran las sesiones ")
         mostrar_sesiones(conn)
+    else:
+        print("La sesion no se pudo registrar debido a error en los datos ingresados, puede ser por falta de entrenadores")
 
 
 """ Desactiva la sesion indicada """
-def dar_baja_sesion(conn, id_sesion, id_categoria):
+def modificar_sesion(conn, id_sesion, id_categoria):
     cursor = conn.cursor()
-    query = "UPDATE sesion_ejercicio SET categoria = '%s' WHERE id_sesion = '%s'"
-    cursor.execute(query, (id_categoria, id_sesion))
+    query = "UPDATE sesion_ejercicio SET categoria = '%s' WHERE id_sesion = '%s'" % (id_categoria, id_sesion)
+    cursor.execute(query)
     conn.commit()
-    print("Se ha modificado la categoría de la sesión\nA continuación puede ver el cambio")
+    print("Se ha modificado la categoría de la sesión '%s'\nA continuación puede ver el cambio" %id_sesion)
+    mostrar_sesiones(conn)
+
+
+""" Desactiva la sesion indicada """
+def dar_baja_sesion(conn, id_sesion):
+    cursor = conn.cursor()
+    query = "DELETE FROM sesion_ejercicio WHERE id_sesion = '%s'" %id_sesion
+    cursor.execute(query)
+    conn.commit()
+    print("Se ha eliminado la sesión\nA continuacion puede ver el cambio")
     mostrar_sesiones(conn)
 
 

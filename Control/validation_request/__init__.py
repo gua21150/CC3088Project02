@@ -114,17 +114,18 @@ def solicitar_hora(argumento):
     bandier = False
     while bandier is False:
         dat = input("Ingrese los minutos '%s' " % argumento)
-        mes = 0
+        min_i = 0
         try:
-            mes = int(dat)
+            min_i = int(dat)
         except ValueError:
             print("El dato ingresado no es numerico")
 
-        if 0 <= mes <= 59:
+        if 0 <= min_i <= 59:
             bandier = True
         else:
             dat = input("Ingrese los minutos '%s', debe de estar entre 0 a 59 " % argumento)
 
+    bandier = False
     while bandier is False:
         dat = input("Ingrese la hora de finalización '%s' en formato de 24 horas" % argumento)
         try:
