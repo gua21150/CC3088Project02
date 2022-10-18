@@ -2,8 +2,6 @@ from datetime import date
 from Control.validation_request import solicitar_fecha, create_pandas_table
 
 """ solicitar datos para registrar un nuevo usuario """
-
-
 def solicitar_credenciales(conn):
     try:
         print("\tA continuación se te solicitará información básica para crear tu perfil")

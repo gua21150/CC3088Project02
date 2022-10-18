@@ -2,10 +2,11 @@
 from Control.validation_request import *
 from Control.menus import *
 from Control.menus.menu_usuario__init___ import *
-
+from Control.menus.menu_admin__init__ import *
+from Control.control_admin import iniciar_sesion_admin
 
 conn = connect_db()  # se conecta a la base de datos
-print("---------------")  
+print("---------------")
 print("Bienvenido a iHealth+")
 try:
     menu_login()
@@ -17,24 +18,26 @@ try:
             option2 = int(input("Ingrese su selección: "))
 
             if option2 == 1:  # iniciar sesion como usuario
-                nick, passw = credencial_login("¿Cuál es tu nombre de usuario?")
-                if validar_usuario(conn, 1, nick, passw):
-                    registrar_peso(conn, nick, passw)
-                    accion_usuario_no_suscrito(conn, id)
+                validacion = iniciar_sesion_usuario(conn, nick, passw)
+                if validacion is not False:
+                    id_usuario, suscrip, dias = validacion
+                    print("Faltan %s para tu próxima renovación de servicio" % dias)
+                    # presentar menu de acciones
+                else:
+                    print("Este usuario no esta registrado. Valide su nickname y contraseña")
 
             elif option2 == 2:
                 # iniciar sesion como trabajador
-                correo, passw = credencial_login("¿Cuál es tu correo?")
-                if validar_usuario(conn, 2, correo, passw):
-                    print("gato")    
+                if iniciar_sesion_admin(conn, correo, passw):
+                    menu_usuario_admin()
         elif option == 2:  # registrar usuario
             cant = int(input("Ingrese la cantidad de numeros aleatorios que desea obtener: "))
-            
+
         menu_login()
         option = int(input("Ingrese su opción: "))
-    
-    print("Feliz día")    
+
+    print("Feliz día")
 except:
-    print("Su entrada no es válida, feliz día") 
+    print("Su entrada no es válida, feliz día")
 finally:
     conn.close()
