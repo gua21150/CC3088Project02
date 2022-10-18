@@ -1,14 +1,13 @@
 # importacion de librerías
-
-from Control.function_validation import *
+from Control.validation_request import *
 from Control.menus import *
-from Control.control_usuario import *
+from Control.menus.menu_usuario__init___ import *
 
-conn = conect_db()  # se conecta a la base de datos
+
+conn = connect_db()  # se conecta a la base de datos
 print("---------------")  
 print("Bienvenido a iHealth+")
-try:   
-
+try:
     menu_login()
     option = int(input("Ingrese su opción: "))
 
@@ -18,12 +17,14 @@ try:
             option2 = int(input("Ingrese su selección: "))
 
             if option2 == 1:  # iniciar sesion como usuario
-                nick, passw = credencial_login()
+                nick, passw = credencial_login("¿Cuál es tu nombre de usuario?")
                 if validar_usuario(conn, 1, nick, passw):
-                    registrar_peso(conn,nick,passw)
+                    registrar_peso(conn, nick, passw)
+                    accion_usuario_no_suscrito(conn, id)
+
             elif option2 == 2:
                 # iniciar sesion como trabajador
-                correo, passw = credencial_login_trabajador()
+                correo, passw = credencial_login("¿Cuál es tu correo?")
                 if validar_usuario(conn, 2, correo, passw):
                     print("gato")    
         elif option == 2:  # registrar usuario
