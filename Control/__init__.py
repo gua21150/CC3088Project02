@@ -46,7 +46,7 @@ def recuperar_id_trabajador(conn, correo, passw):
 """ solicita la fecha en un formato correcto """
 
 
-def solicitar_fecha(argumento):
+def solicitar_datos_fecha(argumento, limite):
     bandier = False
     anio = ""
     mes = ""
@@ -59,7 +59,7 @@ def solicitar_fecha(argumento):
         except ValueError:
             print("El dato ingresado no es numerico")
 
-        if 1950 <= anio <= 2022:
+        if 1950 <= anio <= limite:
             bandier = True
         else:
             dat = input("Ingrese el año '%s', debe de estar entre 1950 a 2022 " % argumento)
