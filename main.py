@@ -37,7 +37,7 @@ try:
                                 print("Presentar las sesiones de esta semana")
                                 query = "select id_sesion, ejercicio, fecha, hora_inicio, hora_fin, nombres "\
                                         "From sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria "\
-                                           "                         inner join trabajador t on ses.instructor=t.id "\
+                                        "                         inner join trabajador t on ses.instructor=t.id "\
                                         "WHERE fecha between current_date and current_date+'1 week'::interval; "
                                 print(create_pandas_table(query, conn))
                                 eleccion = str(input("Ingrese el id de la sesion a la que desea conectarse "))
@@ -66,7 +66,6 @@ try:
                                         "inner join sesion_ejercicio ses on sinc.id_sesion = ses.id_sesion " \
                                         "where fecha = current_date and sinc.id_usuario='%s'" %id_usuario
                                 conn = connect_db()
-                                cursor = conn.cursor()
                                 print(create_pandas_table(query, conn))
                                 # unirse = str(input("Ingresa el id de la sesion de hoy para poder unirte"))
                             elif resp == 3:  # sesiones semanales
@@ -102,7 +101,7 @@ try:
                     else:
                         # suscripcion de diamante
                         resp = 1
-                        while resp != 7:
+                        while resp != 8:
                             resp = acciones_usuario_suscrito_diamante()
 
                             if resp == 1:  # sesiones y agendar
@@ -282,7 +281,7 @@ try:
         option = int(input("Ingrese su opción: "))
 
     print("Feliz día, ha cerrado sesion ")
-except:
-    print("Su entrada no es válida, feliz día")
+except Exception as e:
+    print("Su entrada no es válida, feliz día %s" %e)
 finally:
     conn.close()

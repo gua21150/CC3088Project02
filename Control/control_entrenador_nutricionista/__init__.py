@@ -1,4 +1,4 @@
-from Control.validation_request import create_pandas_table
+from Control.validation_request import create_pandas_table, connect_db
 """ solicitar datos para registrar un nuevo entrenador """
 def solicitar_credenciales(conn):
     try:
@@ -43,13 +43,12 @@ def registrar_entrenador(conn):
 
     if data is not False:
         cursor = conn.cursor()     # se conecta a la base de datos
+
         # realizar nuevo codigo de usuario
-        cursor.execute("SELECT id FROM trabajador ORDER BY id DESC LIMIT 1;")  # ultimo trabajador registrado
+        selection = "SELECT 'IDT_'||(nextval('entrenador_sequence')::VARCHAR)"
+        cursor.execute(selection)  # ultimo id de trabajador
         id_trab = cursor.fetchone()
-        id = id_trab  # de la tupla se recupera el primer valor
-        last_id = id[0][4:]  # se recupera los ultimos digitos del id
-        new_id = int(last_id) + 1  # se aumenta en uno el valor del ultimo id
-        id_t = id_trab[0].replace(str(last_id), str(new_id))  # el id correspondiente es este
+        id_t = id_trab[0]
         # insercion de dato
         insert_script = "INSERT INTO trabajador(id, nombres, apellidos, correo, passwordc, activo, rol) "\
                         "VALUES(%s,%s,%s,%s,%s,%s,%s)"
@@ -84,7 +83,7 @@ def mostrar_entrenadores(conn):
 """ Muestra los entrenadores que están disponibles segun fecha y rango de horas"""
 def mostrar_entrenadores_activos(conn,hi, hf, fecha):
     query = "SELECT trab.id, trab.nombres, trab.apellidos "\
-            "FROM trabajador trab INNER JOIN sesion_ejercicio se on trab.id = se.instructor "\
+            "FROM trabajador trab "\
             "WHERE trab.id NOT IN ( "\
             "                        SELECT instructor FROM sesion_ejercicio "\
             "                        WHERE ((EXTRACT(HOUR FROM hora_inicio))"\
@@ -92,7 +91,7 @@ def mostrar_entrenadores_activos(conn,hi, hf, fecha):
             "                       ((EXTRACT(HOUR FROM hora_fin)) "\
             "                       BETWEEN EXTRACT(HOUR FROM time'%s') AND EXTRACT(HOUR FROM time'%s'))"\
             "                       AND (fecha = '%s') "\
-            "                      )  AND trab.activo = True "\
+            "                      )  AND trab.activo = True AND trab.rol='IDR_EP'"\
             "GROUP BY trab.id, trab.nombres, trab.apellidos;" %(hi, hf, hi, hf, fecha)
 
     result = create_pandas_table(query, conn)

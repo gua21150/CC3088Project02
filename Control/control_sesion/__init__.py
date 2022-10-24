@@ -1,4 +1,4 @@
-from Control.validation_request import solicitar_fecha, solicitar_hora, create_pandas_table
+from Control.validation_request import create_pandas_table, solicitar_datos_fecha, connect_db, solicitar_hora
 from Control.control_entrenador_nutricionista import mostrar_entrenadores_activos
 
 """ categorias disponibles"""
@@ -15,7 +15,7 @@ def solicitar_datos_sesion(conn):
         print("\tA continuación se te solicitará información para crear la sesión")
         print("\tSI ALGUNO DE LOS DATOS ES INCORRECTO SE TE NOTIFICARÁ")
         bandier = True
-        fecha = solicitar_fecha(" para la sesión ")
+        fecha = solicitar_datos_fecha(" para la sesión ", 2022)
         data = solicitar_hora(" de la sesión ")
         if data is not False:
             hora_inicio, hora_final, tiempo = data
@@ -38,12 +38,10 @@ def registrar_sesion(conn):
     if data is not False:
         cursor = conn.cursor()  # se conecta a la base de datos
         # realizar nuevo codigo de usuario
-        cursor.execute("SELECT id_sesion FROM sesion_ejercicio ORDER BY id_sesion DESC LIMIT 1;")  # ultimo trabajador registrado
+        selection = "SELECT 'IDEj_'||(nextval('sesion_sequence')::VARCHAR)"
+        cursor.execute(selection)  # ultimo usuario
         id_sesion = cursor.fetchone()
-        id = id_sesion  # de la tupla se recupera el primer valor
-        last_id = id[0][5:]  # se recupera los ultimos digitos del id
-        new_id = int(last_id) + 1  # se aumenta en uno el valor del ultimo id
-        id_u = id_sesion[0].replace(str(last_id), str(new_id))
+        id_u = id_sesion[0]
         # insercion de dato
         insert_script = "INSERT INTO sesion_ejercicio(id_sesion, fecha, hora_inicio, hora_fin, duracion, instructor, categoria) " \
                         "VALUES(%s,%s,%s,%s,%s,%s,%s)"

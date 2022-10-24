@@ -1,4 +1,4 @@
-from Control.validation_request import solicitar_fecha, create_pandas_table, connect_db
+from Control.validation_request import create_pandas_table, connect_db, solicitar_datos_fecha
 
 def iniciar_sesion_admin(conn, usern, passw):
     cursor = conn.cursor()
@@ -27,8 +27,8 @@ def sesiones_populares(conn):
 
 """Cantidad de sesiones y usuarios por cada categoría, para un rango de fechas dado."""
 def sesiones_fecha(conn):
-    fecha_inicio = str(solicitar_fecha(" de inicio del rango de busqueda "))
-    fecha_fin = str(solicitar_fecha(" de fin del rango de busqueda "))
+    fecha_inicio = str(solicitar_datos_fecha(" de inicio del rango de busqueda ", 2022))
+    fecha_fin = str(solicitar_datos_fecha(" de fin del rango de busqueda ", 2022))
     print("\t\tTotal de sesiones entre %s y %s" % (fecha_inicio, fecha_fin))
     query = "Select ejercicio, count(id_sesion) "\
             "from categoria_ejercicio ce, sesion_ejercicio se "\
@@ -73,7 +73,7 @@ def cuentas_diamante(conn):
 
 """ Para una fecha específica, ¿cuál es la hora pico donde el servicio es más utilizado? """
 def hora_pico(conn):
-    fecha = solicitar_fecha("fecha de busqueda ")
+    fecha = solicitar_datos_fecha("fecha de busqueda ", 2022)
     query = "SELECT se.hora_inicio, COUNT(sin.id_usuario) total_personas, se.hora_fin, COUNT(sin.id_usuario) total_personas "\
             "FROM sincronizacion_ejercicio sin INNER JOIN sesion_ejercicio se ON se.id_sesion = sin.id_sesion "\
             "WHERE se.fecha = '%s' "\

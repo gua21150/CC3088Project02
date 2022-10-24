@@ -1,5 +1,5 @@
 from datetime import date
-from Control.validation_request import solicitar_fecha, create_pandas_table, connect_db
+from Control.validation_request import solicitar_datos_fecha, create_pandas_table, connect_db
 
 """ solicitar datos para registrar un nuevo usuario """
 def solicitar_credenciales(conn):
@@ -13,7 +13,9 @@ def solicitar_credenciales(conn):
 
         while bandier is True:  # conocer que el nickname no esta tomado
             cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM usuario WHERE nickname='%s'" % nickname)
+            query = "SELECT 1 FROM usuario WHERE nickname='{nick}'"
+            val = {"nick": nickname}
+            cursor.execute(query, val)
             result = cursor.fetchone()
             if result != 'None':
                 bandier = False
@@ -23,7 +25,9 @@ def solicitar_credenciales(conn):
         correo = str(input("¿Cuál es tu correo?"))
         while bandier is True:  # conocer que el correo no esta registrado
             cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM usuario WHERE correo='%s'" % correo)            
+            query = "SELECT 1 FROM usuario WHERE correo='{correo}'"
+            values = {"correo": correo}
+            cursor.execute(query, values)
             result = cursor.fetchone()
             if result != 'None':
                 bandier = False
@@ -60,12 +64,10 @@ def registrar_usuario(conn):
     if data is not False:
         cursor = conn.cursor()  # se conecta a la base de datos
         # realizar nuevo codigo de usuario
-        cursor.execute("SELECT id_usuario FROM usuario ORDER BY id_usuario DESC LIMIT 1;")  # ultimo usuario        
+        selection = "SELECT 'IDU_'||(nextval('usuario_sequence')::VARCHAR)"
+        cursor.execute(selection)  # ultimo usuario
         id_sesion = cursor.fetchone()
-        id = id_sesion  # de la tupla se recupera el primer valor
-        last_id = id[0][4:]  # se recupera los ultimos digitos del id
-        new_id = int(last_id) + 1  # se aumenta en uno el valor del ultimo id
-        id_u = id_sesion[0].replace(str(last_id), str(new_id))  # el id correspondiente es este
+        id_u = id_sesion[0]
         # insercion de dato
         insert_script = "INSERT INTO usuario(id_usuario, nombres, apellidos, nickname, edad, altura, caloria_actual,peso_actual, correo, passwordc)" \
                         "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
@@ -73,11 +75,11 @@ def registrar_usuario(conn):
         cursor.execute(insert_script, insert_values)
         conn.commit()
         print("Registro realizado")
-        return id  # el usuario queda "iniciada" su sesion
+
+        return id_u  # el usuario queda "iniciada" su sesion
 
 
-"""recupera el id del usuario con el que se estara trabajando, es iniciar sesion,
-   se inicia sesion unicamente si el usuario esta activo """
+
 def iniciar_sesion_usuario(conn, usern, passw):
     cursor = conn.cursor()
     query = "SELECT usuario.id_usuario, us.id_suscripcion, ((us.fecha_inicio+'1 year'::INTERVAL) - current_date)::VARCHAR " \
@@ -88,11 +90,10 @@ def iniciar_sesion_usuario(conn, usern, passw):
     data = (usern, passw)
     cursor.execute(query, data)
     user_data = cursor.fetchone()
-    if user_data != 'None':
+    if user_data is not None:
         return user_data
     else:
         return False
-
 
 """" solicitar datos relacionados al registro de peso y calorias del usuario"""
 
@@ -115,10 +116,10 @@ def registrar_peso(conn, id):
     data = peso()
     if data is not False:
         cursor = conn.cursor()
-
-        insert_script = "INSERT INTO usuario_registro_historico(id_usuario, peso, caloria, fecha) VALUES(%s, %s, %s, %s)"
-        insert_values = (id, data[0], data[1], data[2])
-        cursor.execute(insert_script, insert_values)
+        insert_script = "INSERT INTO usuario_registro_historico(id_usuario, peso, caloria, fecha) "\
+                        "VALUES(%s, %s, %s, %s)"
+        values = (id, data[0], data[1], data[2])
+        cursor.execute(insert_script, values)
         conn.commit()
         print("Se ha registrado tu peso y calorías actuales")
 
@@ -131,17 +132,16 @@ def registrar_peso(conn, id):
 """ verifica que el metodo de pago no este ya dentro de la base de datos 
     retorna True cuando el dato no se encuentra y False cuando ya se encuentra """
 
-
 def validar_metodo_pago(conn, cod_tarjeta):
     cursor = conn.cursor()
-    select_script = "SELECT 1 FROM metodo_pago WHERE cod_tarjeta='%s'" % cod_tarjeta
+    select_script = """SELECT 1 FROM metodo_pago WHERE cod_tarjeta='%s' """ % str(cod_tarjeta)
     cursor.execute(select_script)
     value = cursor.fetchone()
 
-    if value == 'None':  # no hay tarjetas con este codigo
-        return True
-    else:
+    if value is None:  # no hay tarjetas con este codigo
         return False
+    else:
+        return True
 
 
 """" solicita los datos para el metodo de pago """
@@ -151,9 +151,9 @@ def credencial_metodo_pago(conn):
     try:
         cod_tarjeta = str(input("Ingrese el codigo de su tarjeta"))
         value = validar_metodo_pago(conn, cod_tarjeta)
-        if value is True:
+        if value is not True:
             nombre = str(input("Ingrese el nombre que aparece en su tarjeta"))
-            fecha = solicitar_fecha(" de su tarjeta")
+            fecha = solicitar_datos_fecha(" de vencimiento de su tarjeta", 2030)
             cvv = int(input("Ingrese el CVV de su tarjeta"))
             tarjeta = int(input("¿Cuál es el tipo de esta tarjeta?\n[1]Crédito\n[2]Débito "))
             tipo_tarjeta = ""
@@ -180,8 +180,9 @@ def registro_metodo_pago(conn):
     cod_tarjeta = 0
     if data is not False:
         cursor = conn.cursor()
-        insert_script = "INSERT INTO metodo_pago(cod_tarjeta, nombre_tarjeta, fecha_caducidad, cvv, tipo_tarjeta) VALUES('%s', '%s','%s','%s','%s')"
-        insert_values = data
+        insert_script = "INSERT INTO metodo_pago(cod_tarjeta, nombre_tarjeta, fecha_caducidad, cvv, tipo_tarjeta) " \
+                        "VALUES(%s, %s, %s, %s, %s)"
+        insert_values = (data[0], data[1], data[2], data[3], data[4])
         cursor.execute(insert_script, insert_values)
         conn.commit()
         print("Se ha registrado este metodo de pago")
@@ -220,30 +221,30 @@ def registrar_suscripcion(conn, id, tipo):
     print("Tu fecha de inicio de esta plan se registrara como el día actual en tu dispositivo")
     cursor = conn.cursor()
     plan_anterior = "UPDATE usuario_suscripcion SET activo = FALSE " \
-                    "WHERE id_usuario='%s' AND fecha_inicio =" \
+                    "WHERE id_usuario=%s AND fecha_inicio =" \
                     "(SELECT  fecha_inicio FROM usuario_suscripcion " \
-                    "WHERE   id_usuario='%s' ORDER BY fecha_inicio DESC LIMIT 1)"
-
-    cursor.execute(plan_anterior)  # se desactiva el plan anterior en caso que exista
+                    "WHERE   id_usuario=%s ORDER BY fecha_inicio DESC LIMIT 1)"
+    variable = (id,id)
+    cursor.execute(plan_anterior, variable)  # se desactiva el plan anterior en caso que exista
     conn.commit()
     conn = connect_db()
     cursor = conn.cursor()
     insert_script = "INSERT INTO usuario_suscripcion(id_usuario, id_suscripcion, activo, fecha_inicio) " \
                     "VALUES(%s,%s,%s,%s)"
-    insert_values = (id, tipo, True, str(date.today()))
-    cursor.execute(insert_script, insert_values)
+    datos = (str(id), str(tipo), True, str(date.today()))
+    cursor.execute(insert_script, datos)
     conn.commit()
 
     print("Se ha suscrito con éxito\nSe procedera a registrar su pago del correspondiente mes")
 
 
 def validar_cvv(conn, cod_tarjeta):
-    cursor = conn.conect()
-    select_script = "SELECT cvv FROM metodo_pago WHERE cod_tarjeta=%s"
-    cursor.execute(select_script % cod_tarjeta)
+    cursor = conn.cursor()
+    select_script = "SELECT cvv FROM metodo_pago WHERE cod_tarjeta='%s' " %str(cod_tarjeta)
+    cursor.execute(select_script)
     value = cursor.fetchone()
 
-    if value == 'None':  # no hay tarjetas con este codigo
+    if value is None:  # no hay tarjetas con este codigo
         return True
     else:
         return value[0]  # retorna el cvv
@@ -258,7 +259,8 @@ def realizar_pago_suscripcion(conn, id_usuario):
     while bandier is True:
         while bandier1 is True:
             try:
-                cod_tarjeta = input("Ingrese el número de su tarjeta con la que realizará el pago ")
+                cod_tarjeta = str\
+                    (input("Ingrese el número de su tarjeta con la que realizará el pago "))
                 cvv = int(input("Ingrese el CVV de su tarjeta"))
                 if len(cod_tarjeta) > 0:
                     bandier1 = False
@@ -271,7 +273,8 @@ def realizar_pago_suscripcion(conn, id_usuario):
             fecha = str(date.today())
             print("\t\tLa fecha de pago se registrará la fecha de su dispositivo")
             # insertar en la relacion de la tabla
-            insert_script = "INSERT INTO pago(id_usuario, cod_tarjeta, fecha_facturacion) VALUES (%s,%s,%s)"
+            insert_script = "INSERT INTO pago(id_usuario, cod_tarjeta, fecha_facturacion) "\
+                            "VALUES (%s, %s, %s)"
             insert_values = (id_usuario, cod_tarjeta, fecha)
             cursor.execute(insert_script, insert_values)
             conn.commit()
@@ -285,14 +288,15 @@ def realizar_pago_suscripcion(conn, id_usuario):
 """ funcion usada por usuario admin para poder desactivar un usuario """
 def desactivar_usuario(conn, id_usuario):
     cursor = conn.cursor()
-    query = "UPDATE usuario_suscripcion SET activo = False WHERE id_usuario = %s"
-    cursor.execute(query, id_usuario)
+    query = "UPDATE usuario_suscripcion SET activo = False WHERE id_usuario =%s "
+    query_value = (id_usuario,)
+    cursor.execute(query, query_value)
     conn.commit()
     conn = connect_db()
     cursor = conn.cursor()
     print("El usuario ha sido DESACTIVADO, se procedera ha ELIMINAR su informacion de pago")
-    query = "delete from pago where id_usuario=%s"
-    cursor.execute(query, id_usuario)
+    query = "DELETE FROM pago WHERE id_usuario=%s "
+    cursor.execute(query, query_value)
     conn.commit()
     print("Informacion de pago ELIMINADA correctamente")
     print("Se ha actualizado el estado de este usuario")
