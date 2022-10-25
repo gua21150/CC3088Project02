@@ -224,7 +224,7 @@ def registrar_suscripcion(conn, id, tipo):
                     "WHERE id_usuario=%s AND fecha_inicio =" \
                     "(SELECT  fecha_inicio FROM usuario_suscripcion " \
                     "WHERE   id_usuario=%s ORDER BY fecha_inicio DESC LIMIT 1)"
-    variable = (id,id)
+    variable = (id, id)
     cursor.execute(plan_anterior, variable)  # se desactiva el plan anterior en caso que exista
     conn.commit()
     conn = connect_db()
@@ -273,9 +273,10 @@ def realizar_pago_suscripcion(conn, id_usuario):
             fecha = str(date.today())
             print("\t\tLa fecha de pago se registrará la fecha de su dispositivo")
             # insertar en la relacion de la tabla
-            insert_script = "INSERT INTO pago(id_usuario, cod_tarjeta, fecha_facturacion) "\
-                            "VALUES (%s, %s, %s)"
-            insert_values = (id_usuario, cod_tarjeta, fecha)
+            insert_script = "INSERT INTO pago(id_usuario, cod_tarjeta) "\
+                            "VALUES (%s, %s)"
+
+            insert_values = (id_usuario, cod_tarjeta)
             cursor.execute(insert_script, insert_values)
             conn.commit()
             bandier = False
