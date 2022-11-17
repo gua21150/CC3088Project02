@@ -30,7 +30,7 @@ def solicitar_credenciales(conn):
                 print("\tLas contraseñas no coinciden, te las vamos a solicitar nuevamente")
                 password = str(input("¿Cuál es tu contraseña?"))
                 password2 = str(input("Confirma tu contraseña"))
-
+        # cambiar idr_ep a 6
         return nombres, apellidos, correo, password, True, 'IDR_EP'
     except ValueError:
         print("Los datos ingresados no son válidos, tendrá que regresar a esta parte del menú")
@@ -93,6 +93,6 @@ def mostrar_entrenadores_activos(conn,hi, hf, fecha):
             "                       AND (fecha = '%s') "\
             "                      )  AND trab.activo = True AND trab.rol='IDR_EP'"\
             "GROUP BY trab.id, trab.nombres, trab.apellidos;" %(hi, hf, hi, hf, fecha)
-
+    # cambiar idr_ep a 6
     result = create_pandas_table(query, conn)
     print(result)

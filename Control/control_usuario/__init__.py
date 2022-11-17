@@ -158,9 +158,9 @@ def credencial_metodo_pago(conn):
             tarjeta = int(input("¿Cuál es el tipo de esta tarjeta?\n[1]Crédito\n[2]Débito "))
             tipo_tarjeta = ""
             if tarjeta == 1:
-                tipo_tarjeta = "IDTT_C"
+                tipo_tarjeta = "IDTT_C" # cambiar IDTT_C a 1
             elif tarjeta == 2:
-                tipo_tarjeta = "IDTT_D"
+                tipo_tarjeta = "IDTT_D" # cambiar IDTT_C a 2
 
             return cod_tarjeta, nombre, fecha, cvv, tipo_tarjeta
         else:
