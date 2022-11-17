@@ -5,6 +5,7 @@ def iniciar_sesion_admin(conn, usern, passw):
     query = "SELECT trabajador.id "\
             "FROM trabajador "\
             "WHERE correo =%s AND passwordc=%s AND activo = True AND rol='IDR_AD'"
+    # cambiar idr_ad
     data = (usern, passw)
     cursor.execute(query, data)
     user_data = cursor.fetchone()

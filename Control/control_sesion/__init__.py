@@ -4,7 +4,6 @@ from Control.control_entrenador_nutricionista import mostrar_entrenadores_activo
 """ categorias disponibles"""
 def mostrar_categorias_ejercicio(conn):
     query = "SELECT  id_categoria, ejercicio FROM categoria_ejercicio"
-
     result = create_pandas_table(query, conn)
     print(result)
 

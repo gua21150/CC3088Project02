@@ -52,7 +52,7 @@ try:
                                 except:
                                     print("parece que has ingresado correctamente el id de la sesion")
                             elif resp == 2: # unirse a la sesion
-                                print("Estas son las sesiones de esta semana")
+                                print("Estas son las sesiones de esta semana") # sesiones generales
                                 query = "select sinc.id_sesion, nombres, apellidos, fecha, sinc.hora_inicio, sinc.hora_fin "\
                                         "from sincronizacion_ejercicio sinc inner join usuario us on sinc.id_usuario = us.id_usuario "\
                                         "inner join sesion_ejercicio ses on sinc.id_sesion = ses.id_sesion "\
@@ -60,7 +60,7 @@ try:
                                 conn = connect_db()
                                 cursor = conn.cursor()
                                 print(create_pandas_table(query, conn))
-                                print("El dia de hoy puedes unirte a estas sesiones")
+                                print("El dia de hoy puedes unirte a estas sesiones") # sesion que tiene agendada
                                 query = "select sinc.id_sesion, nombres, apellidos, fecha, sinc.hora_inicio, sinc.hora_fin " \
                                         "from sincronizacion_ejercicio sinc inner join usuario us on sinc.id_usuario = us.id_usuario " \
                                         "inner join sesion_ejercicio ses on sinc.id_sesion = ses.id_sesion " \
@@ -183,7 +183,6 @@ try:
                     resp = 1
                     while resp != 5:
                         resp = menu.menu_principal()
-
                         if resp == 1:  # entrenadores
                             resp1 = menu.menu_entrenadores()
                             if resp1 == 1:  # agregar entrenador
