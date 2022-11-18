@@ -1,4 +1,5 @@
-from Control.validation_request import create_pandas_table, connect_db
+import pandas as pd
+
 """ solicitar datos para registrar un nuevo entrenador """
 def solicitar_credenciales(conn):
     try:
@@ -30,8 +31,7 @@ def solicitar_credenciales(conn):
                 print("\tLas contraseñas no coinciden, te las vamos a solicitar nuevamente")
                 password = str(input("¿Cuál es tu contraseña?"))
                 password2 = str(input("Confirma tu contraseña"))
-        # cambiar idr_ep a 6
-        return nombres, apellidos, correo, password, True, 'IDR_EP'
+        return nombres, apellidos, correo, password, True, 6
     except ValueError:
         print("Los datos ingresados no son válidos, tendrá que regresar a esta parte del menú")
         return False
@@ -45,7 +45,7 @@ def registrar_entrenador(conn):
         cursor = conn.cursor()     # se conecta a la base de datos
 
         # realizar nuevo codigo de usuario
-        selection = "SELECT 'IDT_'||(nextval('entrenador_sequence')::VARCHAR)"
+        selection = "SELECT nextval('entrenador_sequence')"
         cursor.execute(selection)  # ultimo id de trabajador
         id_trab = cursor.fetchone()
         id_t = id_trab[0]
@@ -62,7 +62,7 @@ def registrar_entrenador(conn):
 """ Desactiva al entrenador indicado """
 def dar_baja_entrenador(conn, id_trabajador):
     cursor = conn.cursor()
-    query = "UPDATE trabajador set activo = False where id = '%s'" %id_trabajador
+    query = "UPDATE trabajador set activo = False where id = %s" % id_trabajador
     cursor.execute(query)
     conn.commit()
     print("Se ha desactivado al entrenador\nA continuación puede ver el cambio")
@@ -73,10 +73,8 @@ def dar_baja_entrenador(conn, id_trabajador):
 def mostrar_entrenadores(conn):
     query = "SELECT  id, nombres, apellidos, activo, tipo_rol.rol FROM trabajador " \
             "INNER JOIN tipo_rol ON trabajador.rol = tipo_rol.cod_rol " \
-            "WHERE trabajador.rol = 'IDR_EP' ORDER BY  activo DESC;"
-
-    from Control.validation_request import create_pandas_table
-    result = create_pandas_table(query, conn)
+            "WHERE trabajador.rol = 6 ORDER BY  activo DESC;"
+    result = pd.read_sql(query, conn)
     print(result)
 
 
@@ -91,8 +89,7 @@ def mostrar_entrenadores_activos(conn,hi, hf, fecha):
             "                       ((EXTRACT(HOUR FROM hora_fin)) "\
             "                       BETWEEN EXTRACT(HOUR FROM time'%s') AND EXTRACT(HOUR FROM time'%s'))"\
             "                       AND (fecha = '%s') "\
-            "                      )  AND trab.activo = True AND trab.rol='IDR_EP'"\
-            "GROUP BY trab.id, trab.nombres, trab.apellidos;" %(hi, hf, hi, hf, fecha)
-    # cambiar idr_ep a 6
-    result = create_pandas_table(query, conn)
+            "                      )  AND trab.activo = True AND trab.rol=6 "\
+            "GROUP BY trab.id, trab.nombres, trab.apellidos;" % (hi, hf, hi, hf, fecha)
+    result = pd.read_sql(query, conn)
     print(result)

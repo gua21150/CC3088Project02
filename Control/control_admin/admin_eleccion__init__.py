@@ -15,7 +15,7 @@ def menu_principal_response(conn):
                 registrar_entrenador(conn)
             elif resp1 == 2:  # dar de baja a entrenador
                 mostrar_entrenadores(conn)  # se muestran los entrenadores
-                id_entrenador = input("De los anteriores entrenadores, escriba el id del entrenador")
+                id_entrenador = int(input("De los anteriores entrenadores, escriba el id del entrenador"))
                 dar_baja_entrenador(conn, id_entrenador)
             elif resp1 is False:  # retornar
                 resp = 5  # termina el while
@@ -28,13 +28,13 @@ def menu_principal_response(conn):
                 registrar_sesion(conn)
             elif resp1 == 2:  # modificar sesion
                 mostrar_sesiones_modificar(conn)  # se muestran las sesiones que se pueden modificar
-                id_sesion = input("De las anteriores sesiones, escriba el id de la sesion que desea modificar")
+                id_sesion = int(input("De las anteriores sesiones, escriba el id de la sesion que desea modificar"))
                 mostrar_categorias_ejercicio(conn)
-                id_categoria = input("De las anteriores CATEGORIAS, escriba el id de la categoria que desea modificar")
+                id_categoria = int(input("De las anteriores CATEGORIAS, escriba el id de la categoria que desea modificar"))
                 modificar_sesion(conn, id_sesion, id_categoria)
-            elif resp1 == 3: # dar baja sesion
-                mostrar_sesiones(conn) # se muestran las sesiones
-                id_sesion = input("De las anteriores sesiones, escriba el id de la sesion que desea eliminar")
+            elif resp1 == 3:  # dar baja sesion
+                mostrar_sesiones(conn)  # se muestran las sesiones
+                id_sesion = int(input("De las anteriores sesiones, escriba el id de la sesion que desea eliminar"))
                 dar_baja_sesion(conn, id_sesion)
             elif resp1 is False:  # retornar
                 resp = 5    # termina el while
@@ -45,7 +45,7 @@ def menu_principal_response(conn):
             if resp1 == 1:
                 print("Se le mostraran los usuarios cuyas cuentas estan activas")
                 mostrar_usuarios(conn)
-                res = input("Escriba el id del usuario que desea desactivar. Esta accion es irreversible, ademas se eliminara el metodo de pago del usuario")
+                res = int(input("Escriba el id del usuario que desea desactivar. Esta accion es irreversible, ademas se eliminara el metodo de pago del usuario"))
                 desactivar_usuario(conn, res)
             elif resp1 is False:  # retornar
                 resp = 5  # termina el while
