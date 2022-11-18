@@ -1,7 +1,6 @@
 import psycopg2
 from calendar import monthrange
 from datetime import date
-import pandas as pd
 from config import config
 
 """               REQUEST                      """
@@ -159,13 +158,3 @@ def solicitar_hora(argumento):
     else:
         print("Los datos ingresados no cumplen con que la sesion sea de 30min a 1 hora")
         return False
-
-
-""" visualiza la informacion en un formato mas estilizado """
-
-
-def create_pandas_table(sql_query, conn):
-    database = conn
-    table = pd.read_sql_query(sql_query, database)
-    return table
-

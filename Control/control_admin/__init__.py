@@ -1,16 +1,16 @@
-from Control.validation_request import create_pandas_table, connect_db, solicitar_datos_fecha
+from Control.validation_request import connect_db, solicitar_datos_fecha
+import pandas as pd
 
 def iniciar_sesion_admin(conn, usern, passw):
     cursor = conn.cursor()
     query = "SELECT trabajador.id "\
             "FROM trabajador "\
-            "WHERE correo =%s AND passwordc=%s AND activo = True AND rol='IDR_AD'"
-    # cambiar idr_ad
+            "WHERE correo =%s AND passwordc=%s AND activo = True AND rol between 1 and 4"
     data = (usern, passw)
     cursor.execute(query, data)
     user_data = cursor.fetchone()
     if user_data != 'None':
-        return True
+        return user_data[0]
     else:
         return False
 
@@ -22,7 +22,7 @@ def sesiones_populares(conn):
             "INNER JOIN sesion_ejercicio se on se.id_sesion = sin.id_sesion INNER JOIN categoria_ejercicio ce on " \
             "ce.id_categoria = se.categoria GROUP BY  sin.id_sesion, ce.ejercicio ORDER BY  cantidad DESC LIMIT 10; "
 
-    result = create_pandas_table(query, conn)
+    result = pd.read_sql(query, conn)
     print(result)
 
 
@@ -36,7 +36,7 @@ def sesiones_fecha(conn):
             "where ce.id_categoria = se.categoria and fecha between '%s' and '%s' "\
             "group by ejercicio;" % (fecha_inicio, fecha_fin)
 
-    result = create_pandas_table(query, conn)
+    result = pd.read_sql(query, conn)
     print(result)
     conn = connect_db()
     print("\t\tTotal de usuarios en las categorias de fechas entre %s y %s" % (fecha_inicio, fecha_fin))
@@ -45,7 +45,7 @@ def sesiones_fecha(conn):
             "inner join sincronizacion_ejercicio sinc on ses.id_sesion = sinc.id_sesion "\
             "where ses.fecha between '%s' and '%s' " \
             "group by ejercicio;" % (fecha_inicio, fecha_fin)
-    result = create_pandas_table(query, conn)
+    result = pd.read_sql(query, conn)
     print(result)
 
 """ top 5 entrenadores """
@@ -57,7 +57,7 @@ def top_entrenadores(conn):
             "FROM   sincronizacion_ejercicio sinc INNER JOIN sesion_ejercicio ses ON sinc.id_sesion = ses.id_sesion )" \
             "GROUP BY nombres, apellidos ORDER BY sesiones_dadas DESC LIMIT 5;"
 
-    result = create_pandas_table(query, conn)
+    result = pd.read_sql(query, conn)
     print(result)
 
 
@@ -66,9 +66,9 @@ def cuentas_diamante(conn):
     query = "SELECT COUNT(id_suscripcion) usuarios_diamante "\
             "FROM usuario_suscripcion "\
             "WHERE fecha_inicio > current_date -'6 months'::INTERVAL "\
-            "AND fecha_inicio IS NOT NULL AND id_suscripcion = 'IDS_D';"
+            "AND fecha_inicio IS NOT NULL AND id_suscripcion = 1;"
 
-    result = create_pandas_table(query, conn)
+    result = pd.read_sql(query, conn)
     print(result)
 
 
@@ -79,7 +79,7 @@ def hora_pico(conn):
             "FROM sincronizacion_ejercicio sin INNER JOIN sesion_ejercicio se ON se.id_sesion = sin.id_sesion "\
             "WHERE se.fecha = '%s' "\
             "GROUP BY se.hora_inicio, se.hora_fin "\
-            "ORDER BY total_personas DESC LIMIT 3;" %fecha
+            "ORDER BY total_personas DESC LIMIT 3;" % fecha
 
-    result = create_pandas_table(query, conn)
+    result = pd.read_sql(query, conn)
     print(result)

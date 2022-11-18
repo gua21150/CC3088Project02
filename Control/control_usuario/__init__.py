@@ -1,5 +1,6 @@
 from datetime import date
-from Control.validation_request import solicitar_datos_fecha, create_pandas_table, connect_db
+from Control.validation_request import solicitar_datos_fecha, connect_db
+import pandas as pd
 
 """ solicitar datos para registrar un nuevo usuario """
 def solicitar_credenciales(conn):
@@ -46,12 +47,13 @@ def solicitar_credenciales(conn):
                 password = str(input("¿Cuál es tu contraseña? "))
                 password2 = str(input("Confirma tu contraseña "))
 
-        edad = int(input("¿Cuál es tu edad? "))
+        #edad = int(input("¿Cuál es tu edad? "))
         altura = float(input("¿Cuál es tu altura? "))
         peso = float(input("¿Cuál es tu peso actual? "))
         calorias = float(input("¿Cuáles son tus calorías actuales? "))
+        fecha_nacimiento = solicitar_datos_fecha(' de nacimiento', 2021)
 
-        return nombres, apellidos, nickname, edad, altura, calorias, peso, correo, password
+        return nombres, apellidos, nickname, altura, calorias, peso, correo, password, fecha_nacimiento, 5
     except ValueError:
         print("Los datos ingresados no son válidos, tendrá que regresar a esta parte del menú")
         return False
@@ -64,14 +66,14 @@ def registrar_usuario(conn):
     if data is not False:
         cursor = conn.cursor()  # se conecta a la base de datos
         # realizar nuevo codigo de usuario
-        selection = "SELECT 'IDU_'||(nextval('usuario_sequence')::VARCHAR)"
+        selection = "SELECT nextval('usuario_sequence')"
         cursor.execute(selection)  # ultimo usuario
         id_sesion = cursor.fetchone()
         id_u = id_sesion[0]
         # insercion de dato
-        insert_script = "INSERT INTO usuario(id_usuario, nombres, apellidos, nickname, edad, altura, caloria_actual,peso_actual, correo, passwordc)" \
-                        "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-        insert_values = (id_u, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8])
+        insert_script = "INSERT INTO usuario(id_usuario, nombres, apellidos, nickname, altura, caloria_actual,peso_actual, correo, passwordc, fecha_nacimiento, rol)" \
+                        "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        insert_values = (id_u, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9])
         cursor.execute(insert_script, insert_values)
         conn.commit()
         print("Registro realizado")
@@ -123,9 +125,9 @@ def registrar_peso(conn, id):
         conn.commit()
         print("Se ha registrado tu peso y calorías actuales")
 
-        query ="SELECT id_usuario, peso, caloria, fecha FROM usuario_registro_historico WHERE id_usuario='%s'"\
-               "ORDER BY fecha " %id
-        result = create_pandas_table(query, conn)
+        query ="SELECT id_usuario, peso, caloria, fecha FROM usuario_registro_historico WHERE id_usuario=%s "\
+               "ORDER BY fecha " % id
+        result = pd.read_sql(query, conn)
         print(result)
 
 
@@ -158,9 +160,9 @@ def credencial_metodo_pago(conn):
             tarjeta = int(input("¿Cuál es el tipo de esta tarjeta?\n[1]Crédito\n[2]Débito "))
             tipo_tarjeta = ""
             if tarjeta == 1:
-                tipo_tarjeta = "IDTT_C" # cambiar IDTT_C a 1
+                tipo_tarjeta = 1
             elif tarjeta == 2:
-                tipo_tarjeta = "IDTT_D" # cambiar IDTT_C a 2
+                tipo_tarjeta = 2
 
             return cod_tarjeta, nombre, fecha, cvv, tipo_tarjeta
         else:
@@ -196,7 +198,7 @@ def registro_metodo_pago(conn):
 def presentar_tipos_planes(conn):
     print("\tEstos son los planes que te ofrecemos ")
     query = "SELECT tipo, precio FROM suscripcion;"
-    planes_info = create_pandas_table(query, conn)
+    planes_info = pd.read_sql(query, conn)
     print(planes_info)
     print("En diamante tendrás un IHealthWatch+ de regalo y una sesión mensual con nutricionista")
     print("En oro tendrás un IHealthWatch+ de alquiler")
@@ -204,12 +206,12 @@ def presentar_tipos_planes(conn):
     try:
         plan = int(input("\t\t¿Cuál plan te gustaría obtener?\n\t\t[1]Diamante\n\t\t[2]Oro"))
         if plan == 1:
-            return 'IDS_D'
+            return 1
         elif plan == 2:
-            return 'IDS_O'
+            return 2
         else:
             print("Se le asignara el plan oro")
-            return 'IDS_O'
+            return 2
     except ValueError:
         print("Su respuesta no es valida")
 
@@ -240,7 +242,7 @@ def registrar_suscripcion(conn, id, tipo):
 
 def validar_cvv(conn, cod_tarjeta):
     cursor = conn.cursor()
-    select_script = "SELECT cvv FROM metodo_pago WHERE cod_tarjeta='%s' " %str(cod_tarjeta)
+    select_script = "SELECT cvv FROM metodo_pago WHERE cod_tarjeta='%s' " % str(cod_tarjeta)
     cursor.execute(select_script)
     value = cursor.fetchone()
 
@@ -259,8 +261,8 @@ def realizar_pago_suscripcion(conn, id_usuario):
     while bandier is True:
         while bandier1 is True:
             try:
-                cod_tarjeta = str\
-                    (input("Ingrese el número de su tarjeta con la que realizará el pago "))
+                cod_tarjeta = str(\
+                    input("Ingrese el número de su tarjeta con la que realizará el pago "))
                 cvv = int(input("Ingrese el CVV de su tarjeta"))
                 if len(cod_tarjeta) > 0:
                     bandier1 = False
@@ -309,5 +311,5 @@ def mostrar_usuarios(conn):
             "FROM usuario us INNER JOIN usuario_suscripcion u on us.id_usuario = u.id_usuario " \
             "INNER JOIN suscripcion sus ON sus.id_suscripcion = u.id_suscripcion "\
             "WHERE u.activo = True ORDER BY sus.tipo, u.activo, u.fecha_inicio;"
-    result = create_pandas_table(query, conn)
+    result = pd.read_sql(query, conn)
     print(result)

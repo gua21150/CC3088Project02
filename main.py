@@ -23,10 +23,12 @@ try:
                 validacion = iniciar_sesion_usuario(conn, nick, passw)
 
                 if validacion is not False:
-                    id_usuario, suscrip, dias = validacion
+
+                    id, suscrip, dias = validacion
+                    id_usuario = int(id)
                     print("Faltan %s para tu próxima renovación de servicio" % dias)
                     # presentar menu de acciones
-                    if suscrip == 'IDS_O':
+                    if suscrip == 2:
                         resp = 1
                         while resp != 7:
                             resp = acciones_usuario_suscrito_oro()
@@ -36,14 +38,15 @@ try:
                                 cursor = conn.cursor()
                                 print("Presentar las sesiones de esta semana")
                                 query = "select id_sesion, ejercicio, fecha, hora_inicio, hora_fin, nombres "\
-                                        "From sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria "\
+                                        "from sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria "\
                                         "                         inner join trabajador t on ses.instructor=t.id "\
                                         "WHERE fecha between current_date and current_date+'1 week'::interval; "
-                                print(create_pandas_table(query, conn))
-                                eleccion = str(input("Ingrese el id de la sesion a la que desea conectarse "))
+
+                                print(pd.read_sql(query, conn))
+                                eleccion = str(input("Ingrese el id de la sesion a la que desea conectarse\n\t"))
 
                                 try:
-                                    query = "INSERT INTO sincronizacion_ejercicio (id_usuario, id_sesion) VALUES('%s','%s')" % (id_usuario, eleccion)  # lo registra
+                                    query = "INSERT INTO sincronizacion_ejercicio (id_usuario, id_sesion) VALUES(%s,%s)"% (id_usuario, eleccion)  # lo registra
                                     conn = connect_db()
                                     cursor = conn.cursor()
                                     cursor.execute(query)
@@ -56,18 +59,17 @@ try:
                                 query = "select sinc.id_sesion, nombres, apellidos, fecha, sinc.hora_inicio, sinc.hora_fin "\
                                         "from sincronizacion_ejercicio sinc inner join usuario us on sinc.id_usuario = us.id_usuario "\
                                         "inner join sesion_ejercicio ses on sinc.id_sesion = ses.id_sesion "\
-                                        "where fecha > current_date + interval '-1 week' and sinc.id_usuario='%s'" %id_usuario
+                                        "where fecha > current_date + interval '-1 week' and sinc.id_usuario=%s" %id_usuario
                                 conn = connect_db()
                                 cursor = conn.cursor()
-                                print(create_pandas_table(query, conn))
+                                print(pd.read_sql(query, conn))
                                 print("El dia de hoy puedes unirte a estas sesiones") # sesion que tiene agendada
                                 query = "select sinc.id_sesion, nombres, apellidos, fecha, sinc.hora_inicio, sinc.hora_fin " \
                                         "from sincronizacion_ejercicio sinc inner join usuario us on sinc.id_usuario = us.id_usuario " \
                                         "inner join sesion_ejercicio ses on sinc.id_sesion = ses.id_sesion " \
-                                        "where fecha = current_date and sinc.id_usuario='%s'" %id_usuario
+                                        "where fecha = current_date and sinc.id_usuario=%s" % id_usuario
                                 conn = connect_db()
-                                print(create_pandas_table(query, conn))
-                                # unirse = str(input("Ingresa el id de la sesion de hoy para poder unirte"))
+                                print(pd.read_sql(query, conn))
                             elif resp == 3:  # sesiones semanales
                                 conn = connect_db()
                                 cursor = conn.cursor()
@@ -75,24 +77,24 @@ try:
                                 query = "select id_sesion, ejercicio, fecha, hora_inicio, hora_fin, nombres "\
                                         "From sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria "\
                                         "inner join trabajador t on ses.instructor=t.id"
-                                print(create_pandas_table(query,conn))
+                                print(pd.read_sql(query, conn))
                             elif resp == 4:  # cambiar de plan
                                 conn = connect_db()
                                 tipo = presentar_tipos_planes(conn)  # se presentan tipos de planes
                                 conn = connect_db()
                                 registrar_suscripcion(conn, id_usuario, tipo)
                                 conn = connect_db()
-                                realizar_pago_suscripcion(conn, id)
+                                realizar_pago_suscripcion(conn, id_usuario)
                                 print("Transaccion realizada con exito, por favor vuelva a iniciar sesion")
                                 resp = 7
                             elif resp == 5:  # tiempo del usuario en sesiones
                                 print("Esta es tu estadistica")
                                 query = "select nombres, apellidos, sinc.id_usuario, id_sesion,hora_inicio, hora_fin "\
                                         "from sincronizacion_ejercicio sinc inner join usuario u on sinc.id_usuario = u.id_usuario "\
-                                        "where sinc.id_usuario='%s'" %id_usuario
+                                        "where sinc.id_usuario=%s" % id_usuario
                                 conn = connect_db()
                                 cursor = conn.cursor()
-                                print(create_pandas_table(query, conn))
+                                print(pd.read_sql(query, conn))
                             elif resp == 6:
                                 registrar_peso(conn, id_usuario)
                             else:
@@ -112,11 +114,11 @@ try:
                                         "From sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria " \
                                         "                         inner join trabajador t on ses.instructor=t.id " \
                                         "WHERE fecha between current_date and current_date+'1 week'::interval; "
-                                print(create_pandas_table(query, conn))
+                                print(pd.read_sql(query, conn))
                                 eleccion = str(input("Ingrese el id de la sesion a la que desea conectarse "))
 
                                 try:
-                                    query = "INSERT INTO sincronizacion_ejercicio (id_usuario, id_sesion) VALUES('%s','%s')" % (id_usuario, eleccion)  # lo registra
+                                    query = "INSERT INTO sincronizacion_ejercicio (id_usuario, id_sesion) VALUES(%s, %s)" % (id_usuario, eleccion)  # lo registra
                                     conn = connect_db()
                                     cursor = conn.cursor()
                                     cursor.execute(query)
@@ -130,19 +132,18 @@ try:
                                 query = "select sinc.id_sesion, nombres, apellidos, fecha, sinc.hora_inicio, sinc.hora_fin " \
                                         "from sincronizacion_ejercicio sinc inner join usuario us on sinc.id_usuario = us.id_usuario " \
                                         "inner join sesion_ejercicio ses on sinc.id_sesion = ses.id_sesion " \
-                                        "where fecha > current_date + interval '-1 week' and sinc.id_usuario='%s'" % id_usuario
+                                        "where fecha > current_date + interval '-1 week' and sinc.id_usuario=%s" % id_usuario
                                 conn = connect_db()
                                 cursor = conn.cursor()
-                                print(create_pandas_table(query, conn))
+                                print(pd.read_sql(query, conn))
                                 print("El dia de hoy puedes unirte a estas sesiones")
                                 query = "select sinc.id_sesion, nombres, apellidos, fecha, sinc.hora_inicio, sinc.hora_fin " \
                                         "from sincronizacion_ejercicio sinc inner join usuario us on sinc.id_usuario = us.id_usuario " \
                                         "inner join sesion_ejercicio ses on sinc.id_sesion = ses.id_sesion " \
-                                        "where fecha = current_date and sinc.id_usuario='%s'" % id_usuario
+                                        "where fecha = current_date and sinc.id_usuario=%s" % id_usuario
                                 conn = connect_db()
                                 cursor = conn.cursor()
-                                print(create_pandas_table(query, conn))
-                                # unirse = str(input("Ingresa el id de la sesion de hoy para poder unirte"))
+                                print(pd.read_sql(query, conn))
                             elif resp == 4:  # sesiones semanales
                                 conn = connect_db()
                                 cursor = conn.cursor()
@@ -150,24 +151,24 @@ try:
                                 query = "select id_sesion, ejercicio, fecha, hora_inicio, hora_fin, nombres " \
                                         "From sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria " \
                                         "inner join trabajador t on ses.instructor=t.id"
-                                print(create_pandas_table(query, conn))
+                                print(pd.read_sql(query, conn))
                             elif resp == 5:  # cambiar de plan
                                 conn = connect_db()
                                 tipo = presentar_tipos_planes(conn)  # se presentan tipos de planes
                                 conn = connect_db()
                                 registrar_suscripcion(conn, id_usuario, tipo)
                                 conn = connect_db()
-                                realizar_pago_suscripcion(conn, id)
+                                realizar_pago_suscripcion(conn, id_usuario)
                                 print("Transaccion realizada con exito, por favor vuelva a iniciar sesion")
-                                resp = 7
+                                resp = 8
                             elif resp == 6:  # tiempo del usuario en sesiones
                                 print("Esta es tu estadistica")
                                 query = "select nombres, apellidos, sinc.id_usuario, id_sesion,hora_inicio, hora_fin " \
                                         "from sincronizacion_ejercicio sinc inner join usuario u on sinc.id_usuario = u.id_usuario " \
-                                        "where sinc.id_usuario='%s'" % id_usuario
+                                        "where sinc.id_usuario=%s" % id_usuario
                                 conn = connect_db()
                                 cursor = conn.cursor()
-                                print(create_pandas_table(query, conn))
+                                print(pd.read_sql(query, conn))
                             elif resp == 7:
                                 registrar_peso(conn, id_usuario)
                             elif resp == 3:
@@ -177,9 +178,11 @@ try:
                                 option = 0  # retorna 0 porque desea cerrar sesion
                 else:
                     print("Este usuario no esta registrado. Valide su nickname y contraseña")
-            elif option2 == 2: # iniciar sesion como trabajador
+            elif option2 == 2:  # iniciar sesion como trabajador
                 correo, passw = credencial_login("¿Cuál es tu correo?")
-                if iniciar_sesion_admin(conn, correo, passw):
+                conn = connect_db()
+                id_admin = iniciar_sesion_admin(conn, correo, passw)
+                if id_admin is not False:
                     resp = 1
                     while resp != 5:
                         resp = menu.menu_principal()
@@ -191,7 +194,7 @@ try:
                             elif resp1 == 2:  # dar de baja a entrenador
                                 conn = connect_db()
                                 mostrar_entrenadores(conn)  # se muestran los entrenadores
-                                id_entrenador = str(input("De los anteriores entrenadores, escriba el id del entrenador"))
+                                id_entrenador = int(input("De los anteriores entrenadores, escriba el id del entrenador "))
                                 conn = connect_db()
                                 dar_baja_entrenador(conn, id_entrenador)
                             elif resp1 is False:  # retornar
@@ -207,17 +210,16 @@ try:
                             elif resp1 == 2:  # modificar sesion
                                 conn = connect_db()
                                 mostrar_sesiones_modificar(conn)  # se muestran las sesiones que se pueden modificar
-                                id_sesion = str(input("De las anteriores sesiones, escriba el id de la sesion que desea modificar "))
+                                id_sesion = int(input("De las anteriores sesiones, escriba el id de la sesion que desea modificar "))
                                 conn = connect_db()
                                 mostrar_categorias_ejercicio(conn)
-                                id_categoria = str(input("De las anteriores CATEGORIAS, escriba el id de la categoria que desea modificar" ))
+                                id_categoria = int(input("De las anteriores CATEGORIAS, escriba el id de la categoria que desea modificar "))
                                 conn = connect_db()
                                 modificar_sesion(conn, id_sesion, id_categoria)
                             elif resp1 == 3:  # dar baja sesion
                                 conn = connect_db()
                                 mostrar_sesiones(conn)  # se muestran las sesiones
-                                id_sesion = input(
-                                    "De las anteriores sesiones, escriba el id de la sesion que desea eliminar")
+                                id_sesion = int(input("De las anteriores sesiones, escriba el id de la sesion que desea eliminar "))
                                 conn = connect_db()
                                 dar_baja_sesion(conn, id_sesion)
                             elif resp1 is False:  # retornar
@@ -230,7 +232,7 @@ try:
                                 print("Se le mostraran los usuarios cuyas cuentas estan activas")
                                 conn = connect_db()
                                 mostrar_usuarios(conn)
-                                res = input("Escriba el id del usuario que desea desactivar. Esta accion es irreversible, ademas se eliminara el metodo de pago del usuario ")
+                                res = int(input("Escriba el id del usuario que desea desactivar. Esta accion es irreversible, ademas se eliminara el metodo de pago del usuario "))
                                 conn = connect_db()
                                 desactivar_usuario(conn, res)
                             elif resp1 is False:  # retornar
@@ -273,14 +275,12 @@ try:
             realizar_pago_suscripcion(conn, id)
             print("Por favor inicie sesion")
 
-
-
-
         menu_login()
         option = int(input("Ingrese su opción: "))
 
     print("Feliz día, ha cerrado sesion ")
 except Exception as e:
-    print("Su entrada no es válida, feliz día %s" %e)
+    print("Su entrada no es válida, feliz día. \nERROR: %s" % e)
 finally:
+    conn.rollback()
     conn.close()
