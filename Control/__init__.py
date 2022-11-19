@@ -5,6 +5,8 @@ from config import config
 
 """               REQUEST                      """
 """ CONECTAR A BASE DE DATOS"""
+
+
 def connect_db():
     # conexion a la base de datos
     try:
@@ -88,7 +90,7 @@ def solicitar_datos_fecha(argumento, limite):
             bandier = True
         else:
             dat = input("Ingrese el dia '%s', el mes '%s' tiene rango de dias entre 1 a '%s' " % (
-            argumento, mes, dias_aceptados))
+                argumento, mes, dias_aceptados))
     return date(anio, mes, dia)
 
 

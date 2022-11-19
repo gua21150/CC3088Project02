@@ -47,7 +47,6 @@ def solicitar_credenciales(conn):
                 password = str(input("¿Cuál es tu contraseña? "))
                 password2 = str(input("Confirma tu contraseña "))
 
-        #edad = int(input("¿Cuál es tu edad? "))
         altura = float(input("¿Cuál es tu altura? "))
         peso = float(input("¿Cuál es tu peso actual? "))
         calorias = float(input("¿Cuáles son tus calorías actuales? "))
@@ -75,6 +74,11 @@ def registrar_usuario(conn):
                         "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
         insert_values = (id_u, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9])
         cursor.execute(insert_script, insert_values)
+        conn.commit()
+        procedure = "CALL bitacora_admin(%s,%s,%s,%s);"
+        descripcion = "Se ha unido el usuario %s" % data[2]
+        data = (id_u, data[9], descripcion, 1)
+        cursor.execute(procedure, data)
         conn.commit()
         print("Registro realizado")
 
@@ -118,12 +122,24 @@ def registrar_peso(conn, id):
     data = peso()
     if data is not False:
         cursor = conn.cursor()
-        insert_script = "INSERT INTO usuario_registro_historico(id_usuario, peso, caloria, fecha) "\
-                        "VALUES(%s, %s, %s, %s)"
-        values = (id, data[0], data[1], data[2])
-        cursor.execute(insert_script, values)
-        conn.commit()
-        print("Se ha registrado tu peso y calorías actuales")
+        cursor.execute("SELECT 1 FROM usuario_registro_historico WHERE id_usuario=%s AND fecha=%s", (id, data[2]))
+        validation = cursor.fetchone()
+
+        if validation is not None:
+            print("Ya has realizo un registro de peso para este día\nSe mostraran tus registros historicos de peso")
+        else:
+            insert_script = "INSERT INTO usuario_registro_historico(id_usuario, peso, caloria, fecha) "\
+                            "VALUES(%s, %s, %s, %s)"
+            values = (id, data[0], data[1], data[2])
+            cursor.execute(insert_script, values)
+            conn.commit()
+            print("Se ha registrado tu peso y calorías actuales")
+            cursor.execute("SELECT obtener_nombre(%s,5)" % id)
+            querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+            descripcion = "El usuario %s creo un nuevo registro de peso" % cursor.fetchone()[0]
+            data_bitacora = (id, 5, descripcion, 1)
+            cursor.execute(querry_bitacora, data_bitacora)
+            conn.commit()
 
         query ="SELECT id_usuario, peso, caloria, fecha FROM usuario_registro_historico WHERE id_usuario=%s "\
                "ORDER BY fecha " % id
@@ -177,7 +193,7 @@ def credencial_metodo_pago(conn):
 """" se registra el metodo de pago dentro de la base de datos"""
 
 
-def registro_metodo_pago(conn):
+def registro_metodo_pago(conn, id_usuario):
     data = credencial_metodo_pago(conn)
     cod_tarjeta = 0
     if data is not False:
@@ -186,6 +202,13 @@ def registro_metodo_pago(conn):
                         "VALUES(%s, %s, %s, %s, %s)"
         insert_values = (data[0], data[1], data[2], data[3], data[4])
         cursor.execute(insert_script, insert_values)
+        conn.commit()
+
+        cursor.execute("SELECT obtener_nombre(%s,5)" % id_usuario)
+        querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+        descripcion = "El usuario %s creo un nuevo registro de metodo de pago" % cursor.fetchone()[0]
+        data_bitacora = (id_usuario, 5, descripcion, 1)
+        cursor.execute(querry_bitacora, data_bitacora)
         conn.commit()
         print("Se ha registrado este metodo de pago")
 
@@ -222,13 +245,24 @@ def presentar_tipos_planes(conn):
 def registrar_suscripcion(conn, id, tipo):
     print("Tu fecha de inicio de esta plan se registrara como el día actual en tu dispositivo")
     cursor = conn.cursor()
-    plan_anterior = "UPDATE usuario_suscripcion SET activo = FALSE " \
-                    "WHERE id_usuario=%s AND fecha_inicio =" \
-                    "(SELECT  fecha_inicio FROM usuario_suscripcion " \
-                    "WHERE   id_usuario=%s ORDER BY fecha_inicio DESC LIMIT 1)"
-    variable = (id, id)
-    cursor.execute(plan_anterior, variable)  # se desactiva el plan anterior en caso que exista
-    conn.commit()
+    cursor.execute("SELECT  fecha_inicio FROM usuario_suscripcion " \
+                   "WHERE   id_usuario=%s ORDER BY fecha_inicio DESC LIMIT 1" % id)
+
+    validacion = cursor.fetchone()
+    if validacion is not None:
+        plan_anterior = "UPDATE usuario_suscripcion SET activo = FALSE " \
+                        "WHERE id_usuario=%s AND fecha_inicio =" \
+                        "(SELECT  fecha_inicio FROM usuario_suscripcion " \
+                        "WHERE   id_usuario=%s ORDER BY fecha_inicio DESC LIMIT 1)"
+        variable = (id, id)
+        cursor.execute(plan_anterior, variable)  # se desactiva el plan anterior en caso que exista
+        conn.commit()
+        cursor.execute("SELECT obtener_nombre(%s,5)" % id)
+        querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+        descripcion = "El usuario %s modificó su plan de suscripción" % cursor.fetchone()[0]
+        data_bitacora = (id, 5, descripcion, 2)
+        cursor.execute(querry_bitacora, data_bitacora)
+        conn.commit()
     conn = connect_db()
     cursor = conn.cursor()
     insert_script = "INSERT INTO usuario_suscripcion(id_usuario, id_suscripcion, activo, fecha_inicio) " \
@@ -237,6 +271,12 @@ def registrar_suscripcion(conn, id, tipo):
     cursor.execute(insert_script, datos)
     conn.commit()
 
+    cursor.execute("SELECT obtener_nombre(%s,5)" % id)
+    querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+    descripcion = "El usuario %s creo un nuevo registro en su suscripcion" % cursor.fetchone()[0]
+    data_bitacora = (id, 5, descripcion, 1)
+    cursor.execute(querry_bitacora, data_bitacora)
+    conn.commit()
     print("Se ha suscrito con éxito\nSe procedera a registrar su pago del correspondiente mes")
 
 
@@ -282,6 +322,13 @@ def realizar_pago_suscripcion(conn, id_usuario):
             cursor.execute(insert_script, insert_values)
             conn.commit()
             bandier = False
+
+            cursor.execute("SELECT obtener_nombre(%s,5)" % id_usuario)
+            querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+            descripcion = "El usuario %s creo un nuevo registro de pago de suscripcion" % cursor.fetchone()[0]
+            data_bitacora = (id_usuario, 5, descripcion, 1)
+            cursor.execute(querry_bitacora, data_bitacora)
+            conn.commit()
             print("Su pago ha sido procesado correctamente")
         else:
             print(
@@ -289,12 +336,23 @@ def realizar_pago_suscripcion(conn, id_usuario):
 
 
 """ funcion usada por usuario admin para poder desactivar un usuario """
-def desactivar_usuario(conn, id_usuario):
+def desactivar_usuario(conn, id_usuario, id_admin, rol_admin):
     cursor = conn.cursor()
     query = "UPDATE usuario_suscripcion SET activo = False WHERE id_usuario =%s "
     query_value = (id_usuario,)
     cursor.execute(query, query_value)
     conn.commit()
+
+    cursor.execute("SELECT obtener_nombre(%s,%s)" % (id_admin, rol_admin))
+    admin_name = cursor.fetchone()[0]
+    cursor.execute("SELECT obtener_nombre(%s,5)" % (id_usuario,rol_admin))
+    user_name = cursor.fetchone()[0]
+    querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+    descripcion = "El admin %s modifico el estado de actividad del usuario %s" % (admin_name, user_name)
+    data_bitacora = (id_admin, rol_admin, descripcion, 2)
+    cursor.execute(querry_bitacora, data_bitacora)
+    conn.commit()
+
     conn = connect_db()
     cursor = conn.cursor()
     print("El usuario ha sido DESACTIVADO, se procedera ha ELIMINAR su informacion de pago")
@@ -302,6 +360,11 @@ def desactivar_usuario(conn, id_usuario):
     cursor.execute(query, query_value)
     conn.commit()
     print("Informacion de pago ELIMINADA correctamente")
+    querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+    descripcion = "El admin %s elimino la informacion de pago del usuario %s" % (admin_name, user_name)
+    data_bitacora = (id_admin, rol_admin, descripcion, 3)
+    cursor.execute(querry_bitacora, data_bitacora)
+    conn.commit()
     print("Se ha actualizado el estado de este usuario")
 
 
@@ -313,3 +376,15 @@ def mostrar_usuarios(conn):
             "WHERE u.activo = True ORDER BY sus.tipo, u.activo, u.fecha_inicio;"
     result = pd.read_sql(query, conn)
     print(result)
+
+
+""" mostrar los datos de las sesiones en las que ha participado el usuario"""
+
+def estadisticas_sesiones(conn, id_usuario):
+    data = solicitar_datos_fecha("semana deseas consultar", 2022)
+    if date is not False:
+        query = """SELECT sin.id_sesion, sin.hora_fin-sin.hora_inicio "Tiempo en sesion", sin.ritmo_cardiaco, sin.calorias_quemadas """\
+                "FROM sincronizacion_ejercicio sin INNER JOIN sesion_ejercicio se on sin.id_sesion = se.id_sesion " \
+                "WHERE EXTRACT(WEEK FROM se.fecha) = EXTRACT(WEEK FROM '%s'::DATE) "\
+                "AND sin.id_usuario = %s AND sin.ritmo_cardiaco IS NOT NULL;"
+        print(pd.read_sql_query(query % (data, id_usuario), conn))
