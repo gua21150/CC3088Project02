@@ -1,2 +1,8 @@
 
 database.ini
+Control/__pycache__/__init__.cpython-39.pyc
+Control/control_admin/__pycache__/__init__.cpython-39.pyc
+Control/control_sesion/__pycache__/__init__.cpython-39.pyc
+Control/control_usuario/__pycache__/__init__.cpython-39.pyc
+Control/menus/__pycache__/menu_usuario__init___.cpython-39.pyc
+Control/validation_request/__pycache__/__init__.cpython-39.pyc
