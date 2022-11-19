@@ -65,11 +65,8 @@ def menu_principal_response(conn):
             elif resp1 is False:  # retornar
                 resp = 6  # termina el while
                 return 0
-            
         elif resp == 5:  # simulación
             resp1 = menu.menu_simulacion()
-           
-            
         else:
             resp = 6  # para el while
             return 0  # retorna 0 porque desea cerrar sesion
