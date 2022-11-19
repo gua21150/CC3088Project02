@@ -38,7 +38,7 @@ def solicitar_credenciales(conn):
 
 
 """" registro del entrenador dentro de la base de datos """
-def registrar_entrenador(conn):
+def registrar_entrenador(conn, id_admin, rol):
     data = solicitar_credenciales(conn)  # solicitar informacion usuario
 
     if data is not False:
@@ -55,15 +55,34 @@ def registrar_entrenador(conn):
         insert_values = (id_t, data[0], data[1], data[2], data[3], data[4], data[5])
         cursor.execute(insert_script, insert_values)
         conn.commit()
+
+        cursor.execute("SELECT obtener_nombre(%s,%s)" % (id_admin, rol))
+        admin_name = cursor.fetchone()[0]
+        querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+        descripcion = "El administrador %s creo la cuenta del nuevo entrenador %s" % (admin_name, data[0]+' '+data[1])
+        data_bitacora = (id_admin, rol, descripcion, 1)
+        cursor.execute(querry_bitacora, data_bitacora)
+        conn.commit()
         print("Registro realizado\nSe mostraran los entrenadores")
         mostrar_entrenadores(conn)
 
 
 """ Desactiva al entrenador indicado """
-def dar_baja_entrenador(conn, id_trabajador):
+def dar_baja_entrenador(conn, id_trabajador, id_admin, rol):
     cursor = conn.cursor()
     query = "UPDATE trabajador set activo = False where id = %s" % id_trabajador
     cursor.execute(query)
+    conn.commit()
+
+    # registro en bitacora
+    cursor.execute("SELECT obtener_nombre(%s,%s)" % (id_admin, rol))
+    admin_name = cursor.fetchone()[0]
+    cursor.execute("SELECT obtener_nombre(%s,6)" % id_trabajador)
+    entre_name = cursor.fetchone()[0]
+    querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+    descripcion = "El administrador %s modifico el estado de actividad del entrenador %s" % (admin_name, entre_name)
+    data_bitacora = (id_admin, rol, descripcion, 2)
+    cursor.execute(querry_bitacora, data_bitacora)
     conn.commit()
     print("Se ha desactivado al entrenador\nA continuación puede ver el cambio")
     mostrar_entrenadores(conn)
@@ -73,7 +92,7 @@ def dar_baja_entrenador(conn, id_trabajador):
 def mostrar_entrenadores(conn):
     query = "SELECT  id, nombres, apellidos, activo, tipo_rol.rol FROM trabajador " \
             "INNER JOIN tipo_rol ON trabajador.rol = tipo_rol.cod_rol " \
-            "WHERE trabajador.rol = 6 ORDER BY  activo DESC;"
+            "WHERE trabajador.rol = 6 ORDER BY activo DESC;"
     result = pd.read_sql(query, conn)
     print(result)
 

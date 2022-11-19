@@ -4,7 +4,8 @@ from Control.control_entrenador_nutricionista import *
 from Control.control_sesion import *
 from Control.control_usuario import *
 
-def menu_principal_response(conn):
+
+def menu_principal_response(conn, id_admin, rol):
     resp = 1
     while resp != 6:
         resp = menu.menu_principal()
@@ -12,11 +13,11 @@ def menu_principal_response(conn):
         if resp == 1:  # entrenadores
             resp1 = menu.menu_entrenadores()
             if resp1 == 1:  # agregar entrenador
-                registrar_entrenador(conn)
+                registrar_entrenador(conn, id_admin, rol)
             elif resp1 == 2:  # dar de baja a entrenador
                 mostrar_entrenadores(conn)  # se muestran los entrenadores
                 id_entrenador = int(input("De los anteriores entrenadores, escriba el id del entrenador"))
-                dar_baja_entrenador(conn, id_entrenador)
+                dar_baja_entrenador(conn, id_entrenador, id_admin, rol)
             elif resp1 is False:  # retornar
                 resp = 5  # termina el while
                 return 0    # se cierra sesion automaticamente
