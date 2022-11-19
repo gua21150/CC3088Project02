@@ -377,8 +377,10 @@ def mostrar_usuarios(conn):
     result = pd.read_sql(query, conn)
     print(result)
 
+""" mostrar los datos de las sesiones en las que ha participado el usuario 
+    NOTA: No se pudo agregar las hora de inicio y fin de la sesion debido a que no mostraria toda la informacion
+"""
 
-""" mostrar los datos de las sesiones en las que ha participado el usuario"""
 
 def estadisticas_sesiones(conn, id_usuario):
     data = solicitar_datos_fecha("semana deseas consultar", 2022)

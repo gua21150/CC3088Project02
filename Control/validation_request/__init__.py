@@ -75,7 +75,7 @@ def solicitar_datos_fecha(argumento, anio_limite):
         if 1 <= mes <= 12:
             bandier = True
         else:
-            dat = input("Ingrese el mes '%s', debe de estar entre 1 a 12 " % argumento)
+            print("El mes '%s', debe de estar entre 1 a 12 " % argumento)
 
     bandier = False
     while bandier is False:
@@ -88,7 +88,7 @@ def solicitar_datos_fecha(argumento, anio_limite):
         if 1 <= dia <= dias_aceptados:
             bandier = True
         else:
-            dat = input("Ingrese el dia '%s', el mes '%s' tiene rango de dias entre 1 a '%s' " % (
+            print("El dia '%s', el mes '%s' tiene rango de dias entre 1 a '%s' " % (
             argumento, mes, dias_aceptados))
     return date(anio, mes, dia)
 
@@ -109,7 +109,7 @@ def solicitar_hora(argumento):
         if 0 <= hora_i <= 23:
             bandier = True
         else:
-            dat = input("Ingrese la hora '%s', debe de estar entre 0 y 23 " % argumento)
+            print("La hora '%s', debe de estar entre 0 y 23 " % argumento)
 
     bandier = False
     while bandier is False:
@@ -123,7 +123,7 @@ def solicitar_hora(argumento):
         if 0 <= min_i <= 59:
             bandier = True
         else:
-            dat = input("Ingrese los minutos '%s', debe de estar entre 0 a 59 " % argumento)
+            print("Los minutos '%s', debe de estar entre 0 a 59 " % argumento)
 
     bandier = False
     while bandier is False:
@@ -136,8 +136,8 @@ def solicitar_hora(argumento):
         if 0 <= hora_i <= hora_f <= 23:
             bandier = True
         else:
-            dat = input(
-                "Ingrese la hora '%s', debe de estar entre 0 y 23 y debe ser mayor que su hora de inicio" % argumento)
+            print(
+                "La hora '%s', debe de estar entre 0 y 23 y debe ser mayor que su hora de inicio" % argumento)
 
     bandier = False
     while bandier is False:
@@ -150,7 +150,7 @@ def solicitar_hora(argumento):
         if 0 <= min_f <= 59:
             bandier = True
         else:
-            dat = input("Ingrese los minutos '%s', debe de estar entre 0 a 59 " % argumento)
+            print("Los minutos '%s', debe de estar entre 0 a 59 " % argumento)
 
     hora_i_minutos = (hora_i * 60) + min_i
     hora_f_minutos = (hora_f * 60) + min_f
@@ -178,7 +178,8 @@ def solicitar_hora_busqueda(argumento):
         if 0 <= hora_i <= 23:
             bandier = True
         else:
-            dat = input("Ingrese la hora '%s', debe de estar entre 0 y 23 " % argumento)
+            print("La hora '%s', debe de estar entre 0 y 23 " % argumento)
+
 
     bandier = False
     while bandier is False:
@@ -192,7 +193,7 @@ def solicitar_hora_busqueda(argumento):
         if 0 <= min_i <= 59:
             bandier = True
         else:
-            dat = input("Ingrese los minutos '%s', debe de estar entre 0 a 59 " % argumento)
+            print("Los minutos '%s', debe de estar entre 0 a 59 " % argumento)
 
     bandier = False
     while bandier is False:
@@ -205,8 +206,8 @@ def solicitar_hora_busqueda(argumento):
         if 0 <= hora_i <= hora_f <= 23:
             bandier = True
         else:
-            dat = input(
-                "Ingrese la hora '%s', debe de estar entre 0 y 23 y debe ser mayor que su hora de inicio" % argumento)
+            print(
+                "La hora '%s', debe de estar entre 0 y 23 y debe ser mayor que su hora de inicio" % argumento)
 
     bandier = False
     while bandier is False:
@@ -219,7 +220,7 @@ def solicitar_hora_busqueda(argumento):
         if 0 <= min_f <= 59:
             bandier = True
         else:
-            dat = input("Ingrese los minutos '%s', debe de estar entre 0 a 59 " % argumento)
+            print("Los minutos '%s', debe de estar entre 0 a 59 " % argumento)
 
     hora_i_minutos = (hora_i * 60) + min_i
     hora_f_minutos = (hora_f * 60) + min_f
@@ -244,8 +245,31 @@ def solicitar_duracion():
         if 30.00 <= min_f <= 60.00:
             bandier = True
         else:
-            dat = input("Ingrese la duracion debe de estar entre 30 a 60 min")
+            print("La duracion debe de estar entre 30 a 60 min")
     return min_f
+
+
+def solicitar_categoria(conn):
+    bandier = False
+    cursor = conn.cursor()
+    cursor.execute("""SELECT id_categoria FROM categoria_ejercicio ORDER BY id_categoria ASC LIMIT 1;""")
+    menor_valor = cursor.fetchone()[0]
+    cursor.execute("""SELECT id_categoria FROM categoria_ejercicio ORDER BY id_categoria DESC LIMIT 1;""")
+    mayor_valor = cursor.fetchone()[0]
+    query = """SELECT id_categoria "id", ejercicio FROM categoria_ejercicio ORDER BY id_categoria ASC;"""
+    cat = 0
+    while bandier is False:
+        print(pd.read_sql(query, conn))
+        dat = input("Ingrese la categoria que desea consultar")
+        try:
+            cat = int(dat)
+        except ValueError:
+            print("El dato ingresado no es numerico")
+        if menor_valor <= cat <= mayor_valor:
+            bandier = True
+        else:
+            print("El id ingresado no pertenece a ni un entrenador")
+    return cat
 
 
 def solicitar_categoria(conn):
