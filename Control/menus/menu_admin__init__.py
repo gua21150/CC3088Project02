@@ -4,11 +4,12 @@ def menu_principal():
     print("\t\t[2] Agregar, modificar, dar de baja a sesiones")
     print("\t\t[3] Dar de baja a usuario")
     print("\t\t[4] Reportería de iHealth+")
-    print("\t\t[5] Cerrar sesión")
+    print("\t\t[5] Realizar Simulación")
+    print("\t\t[6] Cerrar sesión")
 
     try:
         select = int(input("¿Cuál es tu selección?"))
-        if 1 <= select <= 5:
+        if 1 <= select <= 6:
             return select
         else:
             print("Opción no válida, se cerrará sesión")
@@ -86,3 +87,22 @@ def menu_reporteria():
     except ValueError:
         print("Opción no válida, se cerrará sesión")
         return False
+    
+def menu_simulacion():
+    print("\t\t Bienvenido al menú de simulación del programa iHealth+, para generar la simulación de un día de actividad deberá:  ")
+    print("\t\t Ingresar la fecha y cantidad de usuarios para la actividad:  ")
+    cantidad_usuarios_simulacion = int(input("Cantidad de usuarios: "))
+    ###fecha_actividad_simulacion
+
+    try:
+        select = int(input("¿Cuál es tu selección?"))
+        if 1 <= select <= 6:
+            return select
+        else:
+            print("Opción no válida, se cerrará sesión")
+            return False
+    except ValueError:
+        print("Opción no válida, se cerrará sesión")
+        return False
+    
+

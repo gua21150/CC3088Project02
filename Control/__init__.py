@@ -1,7 +1,9 @@
 import psycopg2
 from calendar import monthrange
 from datetime import date
-from config import config
+# from config import config
+import config
+
 
 """               REQUEST                      """
 """ CONECTAR A BASE DE DATOS"""

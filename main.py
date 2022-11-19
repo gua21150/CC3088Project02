@@ -258,8 +258,11 @@ try:
                             elif resp1 is False:  # retornar
                                 resp = 5  # termina el while
                                 option = 0
+                        elif resp == 5:  # siomulacion
+                            menu.menu_simulacion()
+                      
                         else:
-                            resp = 5  # para el while
+                            resp = 6  # para el while
                             option = 0  # retorna 0 porque desea cerrar sesion
 
         elif option == 2:  # registrar usuario
