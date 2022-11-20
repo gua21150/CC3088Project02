@@ -93,3 +93,17 @@ def simulacion(conn):
     fecha = solicitar_datos_fecha("fecha de sesiones ")
    
         
+"""Reporteria Proyecto 3"""
+"""El top 5 de las sesiones que mas usuarios tuvieron en cada hora entre 9:00 a.m a 6:00
+p.m para un día dado."""
+
+
+"""El top 10 de los instructores que los usuarios buscan para una semana dado (de lunes a
+domingo)."""
+
+"""El top 5 de los administradores que más modificaciones realizan en las cuentas de usuario
+para un rango de fechas dado"""
+
+
+"""El top 20 de usuarios que llevan más de tres semanas sin realizar ejercicio. La compañía
+quiere hacerles un seguimiento para saber el motivo y ofrecerles apoyo."""
