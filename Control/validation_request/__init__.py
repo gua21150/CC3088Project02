@@ -1,8 +1,8 @@
 import psycopg2
 from calendar import monthrange
 from datetime import date
+from prettytable import PrettyTable
 from config import config
-import pandas as pd
 
 """               REQUEST                      """
 """ CONECTAR A BASE DE DATOS"""
@@ -88,8 +88,7 @@ def solicitar_datos_fecha(argumento, anio_limite):
         if 1 <= dia <= dias_aceptados:
             bandier = True
         else:
-            print("El dia '%s', el mes '%s' tiene rango de dias entre 1 a '%s' " % (
-            argumento, mes, dias_aceptados))
+            print("El dia '%s', el mes '%s' tiene rango de dias entre 1 a '%s' " % (argumento, mes, dias_aceptados))
     return date(anio, mes, dia)
 
 
@@ -256,10 +255,10 @@ def solicitar_categoria(conn):
     menor_valor = cursor.fetchone()[0]
     cursor.execute("""SELECT id_categoria FROM categoria_ejercicio ORDER BY id_categoria DESC LIMIT 1;""")
     mayor_valor = cursor.fetchone()[0]
-    query = """SELECT id_categoria "id", ejercicio FROM categoria_ejercicio ORDER BY id_categoria ASC;"""
+    query = """SELECT id_categoria "ID", ejercicio "Ejercicio" FROM categoria_ejercicio ORDER BY id_categoria ASC;"""
     cat = 0
     while bandier is False:
-        print(pd.read_sql(query, conn))
+        print_tables(query, conn)
         dat = input("Ingrese la categoria que desea consultar")
         try:
             cat = int(dat)
@@ -268,30 +267,7 @@ def solicitar_categoria(conn):
         if menor_valor <= cat <= mayor_valor:
             bandier = True
         else:
-            print("El id ingresado no pertenece a ni un entrenador")
-    return cat
-
-
-def solicitar_categoria(conn):
-    bandier = False
-    cursor = conn.cursor()
-    cursor.execute("""SELECT id_categoria FROM categoria_ejercicio ORDER BY id_categoria ASC LIMIT 1;""")
-    menor_valor = cursor.fetchone()[0]
-    cursor.execute("""SELECT id_categoria FROM categoria_ejercicio ORDER BY id_categoria DESC LIMIT 1;""")
-    mayor_valor = cursor.fetchone()[0]
-    query = """SELECT id_categoria "id", ejercicio FROM categoria_ejercicio ORDER BY id_categoria ASC;"""
-    cat = 0
-    while bandier is False:
-        print(pd.read_sql(query, conn))
-        dat = input("Ingrese la categoria que desea consultar")
-        try:
-            cat = int(dat)
-        except ValueError:
-            print("El dato ingresado no es numerico")
-        if menor_valor <= cat <= mayor_valor:
-            bandier = True
-        else:
-            print("El id ingresado no pertenece a ni un entrenador")
+            print("El id ingresado no pertenece a alguna categoria")
     return cat
 
 
@@ -302,10 +278,10 @@ def solicitar_entrenador(conn):
     menor_valor = cursor.fetchone()[0]
     cursor.execute("""SELECT id FROM trabajador WHERE rol=6 AND activo=TRUE ORDER BY id DESC LIMIT 1;""")
     mayor_valor = cursor.fetchone()[0]
-    query = """SELECT id, nombres||' '||apellidos "Nombre del entrenador" FROM trabajador WHERE rol=6 AND activo=TRUE ORDER BY id ASC;"""
+    query = """SELECT id "ID", nombres||' '||apellidos "Nombre del entrenador" FROM trabajador WHERE rol=6 AND activo=TRUE ORDER BY id ASC;"""
     ent = 0
     while bandier is False:
-        print(pd.read_sql(query, conn))
+        print_tables(query, conn)
         dat = input("Ingrese el id del entrenador que desea consultar")
         try:
             ent = int(dat)
@@ -406,3 +382,58 @@ def solicitar_ritmo_cardiaco_calorias():
         else:
             print("Las pulsaciones por minutos deben de estar entre 80 y 160\nSus calorias quemadas deben de ser superior a 0")
     return pul, cal
+
+
+def solicitar_nombre_apellido(option):
+    bandier = False
+    nombres = ""
+    apellidos = ""
+    if option == 1: # cambiar nombre
+        while bandier is False:
+            nombres = str(input("¿Cuáles son sus nombres?"))
+            if nombres.isspace() is False:
+                bandier = True
+        return nombres
+    elif option == 2: # cambiar apellido
+        while bandier is False:
+            apellidos = str(input("¿Cuáles son sus apellidos?"))
+            if apellidos.isspace() is False:
+                bandier = True
+        return apellidos
+    elif option == 3: # cambiar nombre y apellido
+        while bandier is False:
+            nombres = str(input("¿Cuáles son sus nombres?"))
+            if nombres.isspace() is False:
+                bandier = True
+        bandier = False
+        while bandier is False:
+            apellidos = str(input("¿Cuáles son sus apellidos?"))
+            if apellidos.isspace() is False:
+               bandier = True
+        return nombres, apellidos
+
+
+def solicitar_password():
+    password = ""
+    password2 = ""
+    bandier = True
+    while bandier is True:
+        password = str(input("¿Cuál es la contraseña?"))
+        password2 = str(input("Confirma la contraseña"))
+        if (password == password2) and (password.isspace() is False) and (password2.isspace() is False):
+            bandier = False
+        else:
+            print("\tLas contraseñas no coinciden, te las vamos a solicitar nuevamente")
+    return password
+
+
+def print_tables(query, conn):
+    cursor = conn.cursor()
+    cursor.execute(query)  # ejecuta el query indicado
+    data = cursor.fetchall()
+
+    colnames = [desc[0] for desc in cursor.description]  # el nombre de las columnas
+    t = PrettyTable(colnames)  # las columnas en la tabla
+    for info in data:
+        t.add_row(info)  # las filas en la tabla
+    print(t)

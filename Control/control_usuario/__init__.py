@@ -1,6 +1,6 @@
 from datetime import date
-from Control.validation_request import solicitar_datos_fecha, connect_db
-import pandas as pd
+from Control.validation_request import solicitar_datos_fecha, connect_db, solicitar_password, solicitar_nombre_apellido, \
+    print_tables
 
 """ solicitar datos para registrar un nuevo usuario """
 def solicitar_credenciales(conn):
@@ -8,8 +8,7 @@ def solicitar_credenciales(conn):
         print("\tA continuación se te solicitará información básica para crear tu perfil")
         print("\tSI ALGUNO DE TUS DATOS ES INCORRECTO SE TE NOTIFICARÁ")
         bandier = True
-        nombres = str(input("¿Cuáles son tus nombres?"))
-        apellidos = str(input("¿Cuáles son tus apellidos?"))
+        nombres, apellidos = solicitar_nombre_apellido(3)
         nickname = str(input("¿Cuál es tu username?"))
 
         while bandier is True:  # conocer que el nickname no esta tomado
@@ -18,7 +17,7 @@ def solicitar_credenciales(conn):
             val = {"nick": nickname}
             cursor.execute(query, val)
             result = cursor.fetchone()
-            if result != 'None':
+            if result is None:
                 bandier = False
             else:
                 nickname = str((input("Este nombre de usuario ya esta tomado, intenta con otro")))
@@ -30,22 +29,12 @@ def solicitar_credenciales(conn):
             values = {"correo": correo}
             cursor.execute(query, values)
             result = cursor.fetchone()
-            if result != 'None':
+            if result is None:
                 bandier = False
             else:
                 correo = str((input("Este correo ya está registrado, intenta con otro ")))
 
-        password = str(input("¿Cuál es tu contraseña? "))
-        password2 = str(input("Confirma tu contraseña "))
-
-        bandier = True
-        while bandier is True:
-            if password == password2:
-                bandier = False
-            else:
-                print("\tLas contraseñas no coinciden, te las vamos a solicitar nuevamente")
-                password = str(input("¿Cuál es tu contraseña? "))
-                password2 = str(input("Confirma tu contraseña "))
+        password = solicitar_password()
 
         altura = float(input("¿Cuál es tu altura? "))
         peso = float(input("¿Cuál es tu peso actual? "))
@@ -141,10 +130,9 @@ def registrar_peso(conn, id):
             cursor.execute(querry_bitacora, data_bitacora)
             conn.commit()
 
-        query ="SELECT id_usuario, peso, caloria, fecha FROM usuario_registro_historico WHERE id_usuario=%s "\
+        query ="""SELECT id_usuario "My ID", peso "Peso", caloria "Calorías", fecha "Fecha" FROM usuario_registro_historico WHERE id_usuario=%s """\
                "ORDER BY fecha " % id
-        result = pd.read_sql(query, conn)
-        print(result)
+        print_tables(query, conn)
 
 
 """ verifica que el metodo de pago no este ya dentro de la base de datos 
@@ -221,8 +209,7 @@ def registro_metodo_pago(conn, id_usuario):
 def presentar_tipos_planes(conn):
     print("\tEstos son los planes que te ofrecemos ")
     query = "SELECT tipo, precio FROM suscripcion;"
-    planes_info = pd.read_sql(query, conn)
-    print(planes_info)
+    print_tables(query, conn)
     print("En diamante tendrás un IHealthWatch+ de regalo y una sesión mensual con nutricionista")
     print("En oro tendrás un IHealthWatch+ de alquiler")
 
@@ -267,7 +254,7 @@ def registrar_suscripcion(conn, id, tipo):
     cursor = conn.cursor()
     insert_script = "INSERT INTO usuario_suscripcion(id_usuario, id_suscripcion, activo, fecha_inicio) " \
                     "VALUES(%s,%s,%s,%s)"
-    datos = (str(id), str(tipo), True, str(date.today()))
+    datos = (id, tipo, True, str(date.today()))
     cursor.execute(insert_script, datos)
     conn.commit()
 
@@ -338,44 +325,48 @@ def realizar_pago_suscripcion(conn, id_usuario):
 """ funcion usada por usuario admin para poder desactivar un usuario """
 def desactivar_usuario(conn, id_usuario, id_admin, rol_admin):
     cursor = conn.cursor()
-    query = "UPDATE usuario_suscripcion SET activo = False WHERE id_usuario =%s "
-    query_value = (id_usuario,)
-    cursor.execute(query, query_value)
-    conn.commit()
-
-    cursor.execute("SELECT obtener_nombre(%s,%s)" % (id_admin, rol_admin))
-    admin_name = cursor.fetchone()[0]
-    cursor.execute("SELECT obtener_nombre(%s,5)" % (id_usuario,rol_admin))
-    user_name = cursor.fetchone()[0]
-    querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
-    descripcion = "El admin %s modifico el estado de actividad del usuario %s" % (admin_name, user_name)
-    data_bitacora = (id_admin, rol_admin, descripcion, 2)
-    cursor.execute(querry_bitacora, data_bitacora)
-    conn.commit()
-
-    conn = connect_db()
     cursor = conn.cursor()
-    print("El usuario ha sido DESACTIVADO, se procedera ha ELIMINAR su informacion de pago")
-    query = "DELETE FROM pago WHERE id_usuario=%s "
-    cursor.execute(query, query_value)
-    conn.commit()
-    print("Informacion de pago ELIMINADA correctamente")
-    querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
-    descripcion = "El admin %s elimino la informacion de pago del usuario %s" % (admin_name, user_name)
-    data_bitacora = (id_admin, rol_admin, descripcion, 3)
-    cursor.execute(querry_bitacora, data_bitacora)
-    conn.commit()
-    print("Se ha actualizado el estado de este usuario")
+    cursor.execute("SELECT 1 FROM usuario_suscripcion WHERE id_usuario = %s AND activo = True" % id_usuario)
+    validation = cursor.fetchone()
+    if validation is not None:
+        query = "UPDATE usuario_suscripcion SET activo = False WHERE id_usuario =%s "
+        query_value = (id_usuario,)
+        cursor.execute(query, query_value)
+        conn.commit()
+
+        cursor.execute("SELECT obtener_nombre(%s,%s)", (id_admin, rol_admin))
+        admin_name = cursor.fetchone()[0]
+        cursor.execute("SELECT obtener_nombre(%s,5)" % id_usuario)
+        user_name = cursor.fetchone()[0]
+        querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+        descripcion = "El admin %s modificó el estado de actividad del usuario %s a INACTIVO" % (admin_name, user_name)
+        data_bitacora = (id_admin, rol_admin, descripcion, 2)
+        cursor.execute(querry_bitacora, data_bitacora)
+        conn.commit()
+
+        conn = connect_db()
+        cursor = conn.cursor()
+        query = "DELETE FROM pago WHERE id_usuario=%s "
+        cursor.execute(query, query_value)
+        conn.commit()
+
+        querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+        descripcion = "El admin %s eliminó la información de pago del usuario %s" % (admin_name, user_name)
+        data_bitacora = (id_admin, rol_admin, descripcion, 3)
+        cursor.execute(querry_bitacora, data_bitacora)
+        conn.commit()
+        print("El usuario ha sido DESACTIVADO, se procedera ha ELIMINAR su información de pago")
+        print("Información de pago ELIMINADA correctamente")
 
 
 """ mostrar informacion basica de los usuarios """
 def mostrar_usuarios(conn):
-    query = "SELECT us.id_usuario, us.nombres, us.apellidos, us.nickname, sus.tipo, u.activo, u.fecha_inicio " \
+    query = """SELECT us.id_usuario "ID usuario", us.nombres||' '||us.apellidos"Nombre Usuario", us.nickname "Nickname", """ \
+            """sus.tipo "Tipo suscripción", u.activo "Estado", u.fecha_inicio "Fecha suscripción" """ \
             "FROM usuario us INNER JOIN usuario_suscripcion u on us.id_usuario = u.id_usuario " \
             "INNER JOIN suscripcion sus ON sus.id_suscripcion = u.id_suscripcion "\
             "WHERE u.activo = True ORDER BY sus.tipo, u.activo, u.fecha_inicio;"
-    result = pd.read_sql(query, conn)
-    print(result)
+    print_tables(query, conn)
 
 """ mostrar los datos de las sesiones en las que ha participado el usuario 
     NOTA: No se pudo agregar las hora de inicio y fin de la sesion debido a que no mostraria toda la informacion
@@ -385,8 +376,102 @@ def mostrar_usuarios(conn):
 def estadisticas_sesiones(conn, id_usuario):
     data = solicitar_datos_fecha("semana deseas consultar", 2022)
     if date is not False:
-        query = """SELECT sin.id_sesion, sin.hora_fin-sin.hora_inicio "Tiempo en sesion", sin.ritmo_cardiaco, sin.calorias_quemadas """\
+        query = """SELECT sin.id_sesion "My ID", sin.hora_fin-sin.hora_inicio "Tiempo en sesion", """ \
+                """sin.ritmo_cardiaco "Ritmo Cardíaco", sin.calorias_quemadas "Calorías Quemadas" """\
                 "FROM sincronizacion_ejercicio sin INNER JOIN sesion_ejercicio se on sin.id_sesion = se.id_sesion " \
                 "WHERE EXTRACT(WEEK FROM se.fecha) = EXTRACT(WEEK FROM '%s'::DATE) "\
                 "AND sin.id_usuario = %s AND sin.ritmo_cardiaco IS NOT NULL;"
-        print(pd.read_sql_query(query % (data, id_usuario), conn))
+        print_tables(query % (data, id_usuario), conn)
+
+
+""" Modifica la password del usuario indicado """
+def modificar_password_usuario(conn, id_usuario, id_admin, rol):
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM usuario WHERE id_usuario = %s" % id_usuario)  # existe el id
+    validation = cursor.fetchone()
+
+    if validation is not None:
+        password = solicitar_password()
+        query = "UPDATE usuario set passwordc = %s WHERE id_usuario = %s"
+        cursor.execute(query, (password, id_usuario))
+        conn.commit()
+
+        # registro en bitacora
+        cursor.execute("SELECT obtener_nombre(%s,%s)", (id_admin, rol))
+        admin_name = cursor.fetchone()[0]
+        cursor.execute("SELECT obtener_nombre(%s,5)" % id_usuario)
+        username = cursor.fetchone()[0]
+        querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+        descripcion = "El administrador %s modificó la contraseña del usuario %s" % (
+            admin_name, username)
+        data_bitacora = (id_admin, rol, descripcion, 2)
+        cursor.execute(querry_bitacora, data_bitacora)
+        conn.commit()
+        print("Se ha modificado el password al usuario")
+    else:
+        print("Este id indicado no es valido")
+
+
+""" Modifica el nombre o apellido del usuario indicado """
+def modificar_nombre_usuario (conn, id_usuario, id_admin, rol, tipo_cambio):
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM usuario WHERE id_usuario = %s" % id_usuario)  # existe el id
+    validation = cursor.fetchone()
+
+    if validation is not None:
+        if tipo_cambio == 1:  # nombre
+            nombre = solicitar_nombre_apellido(1)
+            query = "UPDATE usuario set nombres = %s WHERE id_usuario = %s"
+            cursor.execute(query, (nombre, id_usuario))
+            conn.commit()
+
+            # registro en bitacora
+            cursor.execute("SELECT obtener_nombre(%s,%s)", (id_admin, rol))
+            admin_name = cursor.fetchone()[0]
+            cursor.execute("SELECT obtener_nombre(%s,5)" % id_usuario)
+            username = cursor.fetchone()[0]
+            querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+            descripcion = "El administrador %s modificó el nombre del usuario %s" % (
+                admin_name, username)
+            data_bitacora = (id_admin, rol, descripcion, 2)
+            cursor.execute(querry_bitacora, data_bitacora)
+            conn.commit()
+            print("Se ha modificado el nombre al usuario")
+        elif tipo_cambio == 2:
+            apellido = solicitar_nombre_apellido(2)
+            query = "UPDATE usuario set apellidos = %s WHERE id_usuario = %s"
+            cursor.execute(query, (apellido, id_usuario))
+            conn.commit()
+
+            # registro en bitacora
+            cursor.execute("SELECT obtener_nombre(%s,%s)", (id_admin, rol))
+            admin_name = cursor.fetchone()[0]
+            cursor.execute("SELECT obtener_nombre(%s,5)" % id_usuario)
+            username = cursor.fetchone()[0]
+            querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+            descripcion = "El administrador %s modificó el apellido del usuario %s" % (
+                admin_name, username)
+            data_bitacora = (id_admin, rol, descripcion, 2)
+            cursor.execute(querry_bitacora, data_bitacora)
+            conn.commit()
+            print("Se ha modificado el apellido al usuario")
+        elif tipo_cambio == 3:
+            nombre, apellido = solicitar_nombre_apellido(3)
+            query = "UPDATE usuario set nombres = %s, apellidos = %s WHERE id_usuario = %s"
+            cursor.execute(query, (nombre, apellido, id_usuario))
+            conn.commit()
+
+            # registro en bitacora
+            cursor.execute("SELECT obtener_nombre(%s,%s)", (id_admin, rol))
+            admin_name = cursor.fetchone()[0]
+            cursor.execute("SELECT obtener_nombre(%s,6)" % id_usuario)
+            username = cursor.fetchone()[0]
+            querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+            descripcion = "El administrador %s modificó el nombre y apellido del usuario %s" % (
+                admin_name, username)
+            data_bitacora = (id_admin, rol, descripcion, 2)
+            cursor.execute(querry_bitacora, data_bitacora)
+            conn.commit()
+            print("Se ha modificado el nombre y apellido al usuario")
+    else:
+        print("Este id indicado no es valido")

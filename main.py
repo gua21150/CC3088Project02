@@ -180,6 +180,32 @@ try:
                                 id_entrenador = int(input("De los anteriores entrenadores, escriba el id del entrenador "))
                                 conn = connect_db()
                                 dar_baja_entrenador(conn, id_entrenador, cod_admin, rol_admin)
+                            elif resp1 == 3:  # Activar instructor
+                                conn = connect_db()
+                                mostrar_entrenadores(conn)  # se muestran los entrenadores
+                                id_entrenador = int(input("De los anteriores entrenadores, escriba el id del entrenador "))
+                                conn = connect_db()
+                                activar_entrenador(conn, id_entrenador, cod_admin, rol_admin)
+                            elif resp1 == 4:  # modificar nombre
+                                conn = connect_db()
+                                mostrar_entrenadores(conn)  # se muestran los entrenadores
+                                id_entrenador = int(input("De los anteriores entrenadores, escriba el id del entrenador para cambiarle nombre "))
+                                modificar_nombre(conn, id_entrenador, cod_admin, rol_admin, 1)
+                            elif resp1 == 5:  # modificar apellido
+                                conn = connect_db()
+                                mostrar_entrenadores(conn)  # se muestran los entrenadores
+                                id_entrenador = int(input("De los anteriores entrenadores, escriba el id del entrenador para cambiarle apellido "))
+                                modificar_nombre(conn, id_entrenador, cod_admin, rol_admin, 2)
+                            elif resp1 == 6: # modificar nombre y apellido
+                                conn = connect_db()
+                                mostrar_entrenadores(conn)  # se muestran los entrenadores
+                                id_entrenador = int(input("De los anteriores entrenadores, escriba el id del entrenador para cambiarle nombre y apellido "))
+                                modificar_nombre(conn, id_entrenador, cod_admin, rol_admin, 3)
+                            elif resp1 == 7: # modificar password
+                                conn = connect_db()
+                                mostrar_entrenadores(conn)  # se muestran los entrenadores
+                                id_entrenador = int(input("De los anteriores entrenadores, escriba el id del entrenador para cambiarle password "))
+                                modificar_password_entre(conn, id_entrenador, cod_admin, rol_admin)
                             elif resp1 is False:  # retornar
                                 resp = 5  # termina el while
                                 option = 0  # se cierra sesion automaticamente
@@ -189,7 +215,7 @@ try:
                             resp1 = menu.menu_sesiones()
                             if resp1 == 1:  # agregar sesion
                                 conn = connect_db()
-                                registrar_sesion(conn)
+                                registrar_sesion(conn, cod_admin, rol_admin)
                             elif resp1 == 2:  # modificar sesion
                                 conn = connect_db()
                                 mostrar_sesiones_modificar(conn)  # se muestran las sesiones que se pueden modificar
@@ -198,13 +224,13 @@ try:
                                 mostrar_categorias_ejercicio(conn)
                                 id_categoria = int(input("De las anteriores CATEGORIAS, escriba el id de la categoria que desea modificar "))
                                 conn = connect_db()
-                                modificar_sesion(conn, id_sesion, id_categoria)
+                                modificar_sesion(conn, id_sesion, id_categoria, cod_admin, rol_admin)
                             elif resp1 == 3:  # dar baja sesion
                                 conn = connect_db()
                                 mostrar_sesiones(conn)  # se muestran las sesiones
                                 id_sesion = int(input("De las anteriores sesiones, escriba el id de la sesion que desea eliminar "))
                                 conn = connect_db()
-                                dar_baja_sesion(conn, id_sesion)
+                                dar_baja_sesion(conn, id_sesion, cod_admin, rol_admin)
                             elif resp1 is False:  # retornar
                                 resp = 5  # termina el while
                                 option = 0  # se cierra sesion automaticamente
@@ -217,7 +243,31 @@ try:
                                 mostrar_usuarios(conn)
                                 res = int(input("Escriba el id del usuario que desea desactivar. Esta accion es irreversible, ademas se eliminara el metodo de pago del usuario "))
                                 conn = connect_db()
-                                desactivar_usuario(conn, res)
+                                desactivar_usuario(conn, res, cod_admin, rol_admin)
+                            elif resp1 == 2:  # modificar nombre
+                                conn = connect_db()
+                                mostrar_usuarios(conn)  # se muestran los usuarios
+                                id_usuario = int(input(
+                                    "De los anteriores usuarios, escriba el id del usuario para cambiarle nombre "))
+                                modificar_nombre_usuario(conn, id_usuario, cod_admin, rol_admin, 1)
+                            elif resp1 == 3:  # modificar apellido
+                                conn = connect_db()
+                                mostrar_usuarios(conn)  # se muestran los usuarios
+                                id_usuario = int(input(
+                                    "De los anteriores usuarios, escriba el id del usuario para cambiarle apellido "))
+                                modificar_nombre_usuario(conn, id_usuario, cod_admin, rol_admin, 2)
+                            elif resp1 == 4:  # modificar nombre y apellido
+                                conn = connect_db()
+                                mostrar_usuarios(conn)  # se muestran los usuarios
+                                id_usuario = int(input(
+                                    "De los anteriores usuarios, escriba el id del usuario para cambiarle nombre y apellido "))
+                                modificar_nombre_usuario(conn, id_usuario, cod_admin, rol_admin, 3)
+                            elif resp1 == 5:  # modificar password
+                                conn = connect_db()
+                                mostrar_usuarios(conn)  # se muestran los usuarios
+                                id_usuario = int(input(
+                                    "De los anteriores usuarios, escriba el id del usuario para cambiarle nombre "))
+                                modificar_password_usuario(conn, id_usuario, cod_admin, rol_admin)
                             elif resp1 is False:  # retornar
                                 resp = 5  # termina el while
                                 option = 0  # se cierra sesion automaticamente
@@ -238,6 +288,12 @@ try:
                             elif resp1 == 5:  # hora pico
                                 conn = connect_db()
                                 hora_pico(conn)
+                            elif resp1 == 6:  # bitacora usuarios
+                                conn = connect_db()
+                                bitacora_usuario(conn)
+                            elif resp1 == 7:  # bitacora admin
+                                conn = connect_db()
+                                bitacora_admin(conn)
                             elif resp1 is False:  # retornar
                                 resp = 5  # termina el while
                                 option = 0

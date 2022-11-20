@@ -1,5 +1,3 @@
-from Control.control_usuario import *
-
 def acciones_usuario_suscrito_oro():
     print("\t¿Qué deseas hacer hoy?")
     print("\t\t[1] Buscar sesión y agendarme")

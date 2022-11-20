@@ -1,15 +1,13 @@
-from ..validation_request import solicitar_datos_fecha, solicitar_hora, solicitar_duracion, solicitar_categoria, \
-    solicitar_entrenador, solicitar_hora_busqueda, solicitar_hora_sincronizacion, solicitar_ritmo_cardiaco_calorias
+from ..validation_request import *
 from Control.control_entrenador_nutricionista import mostrar_entrenadores_activos
-import pandas as pd
+
 
 """ categorias disponibles"""
 
 
 def mostrar_categorias_ejercicio(conn):
-    query = "SELECT  id_categoria, ejercicio FROM categoria_ejercicio"
-    result = pd.read_sql(query, conn)
-    print(result)
+    query = """SELECT  id_categoria "ID", ejercicio "Descripción" FROM categoria_ejercicio"""
+    print_tables(query, conn)
 
 
 """ solicitar datos para registrar un nuevo entrenador """
@@ -21,7 +19,7 @@ def solicitar_datos_sesion(conn):
         print("\tSI ALGUNO DE LOS DATOS ES INCORRECTO SE TE NOTIFICARÁ")
         fecha = solicitar_datos_fecha(" para la sesión ", 2022)
         data = solicitar_hora(" de la sesión ")
-        if data is not False:
+        if (fecha is not False) and (data is not False):
             hora_inicio, hora_final, tiempo = data
             mostrar_entrenadores_activos(conn, hora_inicio, hora_final, fecha)
             entrenador = int(input("¿A quién le asignarás esta sesión? Ingresa su id\n*Si no se mostraron "
@@ -30,6 +28,8 @@ def solicitar_datos_sesion(conn):
             categoria = int(input("¿De qué será la sesión? Ingresa el código"))
 
             return fecha, hora_inicio, hora_final, tiempo, entrenador, categoria
+        else:
+            return False
     except:
         print("Los datos ingresados no son válidos, tendrá que regresar a esta parte del menú")
         return False
@@ -38,10 +38,10 @@ def solicitar_datos_sesion(conn):
 """" registro de la sesion dentro de la base de datos """
 
 
-def registrar_sesion(conn):
+def registrar_sesion(conn, id_admin, rol):
     data = solicitar_datos_sesion(conn)  # solicitar informacion de la sesion
 
-    if data is not False:
+    if (data is not False) and (data is not None):
         cursor = conn.cursor()  # se conecta a la base de datos
         # realizar nuevo codigo de usuario
         selection = "SELECT nextval('sesion_sequence')"
@@ -54,6 +54,15 @@ def registrar_sesion(conn):
         insert_values = (id_u, data[0], data[1], data[2], data[3], data[4], data[5])
         cursor.execute(insert_script, insert_values)
         conn.commit()
+
+        # registro en bitacora
+        cursor.execute("SELECT obtener_nombre(%s,%s)" % (id_admin, rol))
+        admin_name = cursor.fetchone()[0]
+        querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+        descripcion = "El administrador %s creó la sesión %s" % (admin_name, id_u)
+        data_bitacora = (id_admin, rol, descripcion, 1)
+        cursor.execute(querry_bitacora, data_bitacora)
+        conn.commit()
         print("Registro realizado\nSe mostraran las sesiones ")
         mostrar_sesiones(conn)
     else:
@@ -64,10 +73,27 @@ def registrar_sesion(conn):
 """ Desactiva la sesion indicada """
 
 
-def modificar_sesion(conn, id_sesion, id_categoria):
+def modificar_sesion(conn, id_sesion, id_categoria, id_admin, rol):
     cursor = conn.cursor()
-    query = "UPDATE sesion_ejercicio SET categoria = %s WHERE id_sesion = %s" % (id_categoria, id_sesion)
+    query = "SELECT ejercicio FROM categoria_ejercicio " \
+            "INNER JOIN sesion_ejercicio se on categoria_ejercicio.id_categoria = se.categoria " \
+            "WHERE se.id_sesion = %s" % id_sesion
     cursor.execute(query)
+    anterior_categoria = cursor.fetchone()[0]
+    cursor.execute("SELECT ejercicio FROM categoria_ejercicio WHERE id_categoria=%s", (id_categoria,))
+    nueva_categoria = cursor.fetchone()[0]
+    query = "UPDATE sesion_ejercicio SET categoria = %s WHERE id_sesion = %s"
+    cursor.execute(query, (id_categoria, id_sesion))
+    conn.commit()
+
+    # registro en bitacora
+    cursor.execute("SELECT obtener_nombre(%s,%s)" % (id_admin, rol))
+    admin_name = cursor.fetchone()[0]
+    querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+    descripcion = "El administrador %s modificó la categoría de la sesión %s de %s a %s" \
+                  % (admin_name, id_sesion, anterior_categoria, nueva_categoria)
+    data_bitacora = (id_admin, rol, descripcion, 2)
+    cursor.execute(querry_bitacora, data_bitacora)
     conn.commit()
     print("Se ha modificado la categoría de la sesión %s\nA continuación puede ver el cambio" % id_sesion)
     mostrar_sesiones(conn)
@@ -76,10 +102,18 @@ def modificar_sesion(conn, id_sesion, id_categoria):
 """ Desactiva la sesion indicada """
 
 
-def dar_baja_sesion(conn, id_sesion):
+def dar_baja_sesion(conn, id_sesion, id_admin, rol):
     cursor = conn.cursor()
     query = "DELETE FROM sesion_ejercicio WHERE id_sesion = %s" % id_sesion
     cursor.execute(query)
+    conn.commit()
+    # bitacora
+    cursor.execute("SELECT obtener_nombre(%s,%s)" % (id_admin, rol))
+    admin_name = cursor.fetchone()[0]
+    querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+    descripcion = "El administrador %s eliminó la sesión %s" % (admin_name, id_sesion)
+    data_bitacora = (id_admin, rol, descripcion, 3)
+    cursor.execute(querry_bitacora, data_bitacora)
     conn.commit()
     print("Se ha eliminado la sesión\nA continuacion puede ver el cambio")
     mostrar_sesiones(conn)
@@ -89,37 +123,41 @@ def dar_baja_sesion(conn, id_sesion):
 
 
 def mostrar_sesiones_modificar(conn):
-    query = "SELECT ses.id_sesion, ses.fecha, ses.hora_inicio,ses.hora_fin, ce.ejercicio, t.nombres, t.apellidos " \
+    query = """SELECT ses.id_sesion "ID Sesión", ses.Fecha, ses.hora_inicio "Hora de inicio", """ \
+            """ses.hora_fin "Hora de finalización", ce.ejercicio "Categoría", """ \
+            """t.nombres||' '||t.apellidos "Entrenador" """ \
             "FROM  sesion_ejercicio ses INNER JOIN categoria_ejercicio ce on ce.id_categoria = ses.categoria " \
             "INNER JOIN trabajador t on t.id = ses.instructor " \
             "WHERE ses.fecha > current_date"
-    result = pd.read_sql(query, conn)
-    print(result)
+    print_tables(query, conn)
 
 
 """ mostrar las sesiones dentro de la base de datos """
 
 
 def mostrar_sesiones(conn):
-    query = """SELECT ses.id_sesion, ses.fecha, ses.hora_inicio,ses.hora_fin, ce.ejercicio, t.nombres||' '||t.apellidos "Entrenador" """ \
+    query = """SELECT ses.id_sesion "ID Sesión", ses.Fecha, ses.hora_inicio "Hora de inicio", """ \
+            """ses.hora_fin "Hora de finalización", ce.ejercicio "Categoría", """ \
+            """t.nombres||' '||t.apellidos "Entrenador" """ \
             "FROM  sesion_ejercicio ses INNER JOIN categoria_ejercicio ce on ce.id_categoria = ses.categoria " \
             "INNER JOIN trabajador t on t.id = ses.instructor ORDER BY fecha DESC"
-    result = pd.read_sql(query, conn)
-    print(result)
+    print_tables(query, conn)
 
 
 """ mostrar las sesiones disponibles en la base de datos de la presente semana a los usuarios """
 
 
 def mostrar_sesiones_semanales(conn):
-    query = """SELECT ses.id_sesion, cat.ejercicio, ses.fecha, ses.hora_inicio, ses.hora_fin, t.nombres||' '||t.apellidos "Instructor" """ \
+    query = """SELECT ses.id_sesion "ID Sesión", ses.Fecha, ses.hora_inicio "Hora de inicio", """ \
+            """ses.hora_fin "Hora de finalización", cat.ejercicio "Categoría", """ \
+            """t.nombres||' '||t.apellidos "Entrenador" """ \
             "from sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria " \
             "                         inner join trabajador t on ses.instructor=t.id " \
             "WHERE fecha between current_date and current_date+'1 week'::interval; "
-    print(pd.read_sql(query, conn))
+    print_tables(query, conn)
 
     try:
-        inscribir = int(input("¿Deseas agendarte a alguna sesión?\n[1] Sí\n[2]No"))
+        inscribir = int(input("¿Deseas agendarte a alguna sesión?\n[1] Sí\n[2] No\n\t"))
         if inscribir == 1:
             eleccion = int(input("Ingrese el id de la sesion a la que desea conectarse \n\t"))
             return eleccion
@@ -136,11 +174,13 @@ def mostrar_sesiones_semanales(conn):
 def mostrar_sesiones_fecha(conn):
     fecha = solicitar_datos_fecha('de la sesión', 2022)
 
-    query = """SELECT ses.id_sesion, cat.ejercicio, ses.fecha, ses.hora_inicio, ses.hora_fin, t.nombres||' '||t.apellidos "Instructor" """ \
+    query = """SELECT ses.id_sesion "ID Sesión", ses.Fecha, ses.hora_inicio "Hora de inicio", """ \
+            """ses.hora_fin "Hora de finalización", cat.ejercicio "Categoría", """ \
+            """t.nombres||' '||t.apellidos "Entrenador" """ \
             "from sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria " \
             "                         inner join trabajador t on ses.instructor=t.id " \
             "WHERE fecha='%s' and fecha>=current_date;" % fecha
-    print(pd.read_sql(query, conn))
+    print_tables(query, conn)
 
     try:
         inscribir = int(input("¿Deseas agendarte a alguna sesión?\n[1] Sí\n[2]No"))
@@ -162,7 +202,9 @@ def mostrar_sesiones_horario(conn):
     if data is not False:
         hi = data[0]
         hf = data[1]
-        query = """SELECT ses.id_sesion, cat.ejercicio, ses.fecha, ses.hora_inicio, ses.hora_fin, t.nombres||' '||t.apellidos "Instructor" """ \
+        query = """SELECT ses.id_sesion "ID Sesión", ses.Fecha, ses.hora_inicio "Hora de inicio", """ \
+                """ses.hora_fin "Hora de finalización", cat.ejercicio "Categoría", """ \
+                """t.nombres||' '||t.apellidos "Entrenador" """ \
                 "from sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria " \
                 "inner join trabajador t on ses.instructor=t.id " \
                 "WHERE ses.fecha>=current_date and ((EXTRACT(HOUR FROM ses.hora_inicio))" \
@@ -170,7 +212,7 @@ def mostrar_sesiones_horario(conn):
                 "((EXTRACT(HOUR FROM ses.hora_fin)) " \
                 "BETWEEN EXTRACT(HOUR FROM time'%s') AND EXTRACT(HOUR FROM time'%s'))" % (hi, hf, hi, hf)
 
-        print(pd.read_sql(query, conn))
+        print_tables(query, conn)
         try:
             inscribir = int(input("¿Deseas agendarte a alguna sesión?\n[1] Sí\n[2]No"))
             if inscribir == 1:
@@ -190,12 +232,14 @@ def mostrar_sesiones_horario(conn):
 
 def mostrar_sesiones_duracion(conn):
     duracion = solicitar_duracion()
-    query = """SELECT ses.id_sesion, cat.ejercicio, ses.fecha, ses.hora_inicio, ses.duracion, t.nombres||' '||t.apellidos "Instructor" """ \
+    query = """SELECT ses.id_sesion "ID Sesión", ses.Fecha, ses.hora_inicio "Hora de inicio", """ \
+            """ses.hora_fin "Hora de finalización", cat.ejercicio "Categoría", """ \
+            """t.nombres||' '||t.apellidos "Entrenador" """ \
             "from sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria " \
             "                         inner join trabajador t on ses.instructor=t.id " \
             "WHERE ses.duracion=%s and ses.fecha>=current_date" % duracion
+    print_tables(query, conn)
 
-    print(pd.read_sql(query, conn))
     try:
         inscribir = int(input("¿Deseas agendarte a alguna sesión?\n[1] Sí\n[2]No"))
         if inscribir == 1:
@@ -213,13 +257,16 @@ def mostrar_sesiones_duracion(conn):
 
 def mostrar_sesiones_categoria(conn):
     categoria = solicitar_categoria(conn)
-    query = """SELECT ses.id_sesion, cat.ejercicio, ses.fecha, ses.hora_inicio, ses.hora_fin, t.nombres||' '||t.apellidos "Instructor" """ \
+    query = """SELECT ses.id_sesion "ID Sesión", ses.Fecha, ses.hora_inicio "Hora de inicio", """ \
+            """ses.hora_fin "Hora de finalización", cat.ejercicio "Categoría", """ \
+            """t.nombres||' '||t.apellidos "Entrenador" """ \
             "from sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria " \
             "                         inner join trabajador t on ses.instructor=t.id " \
             "WHERE cat.id_categoria=%s and ses.fecha>=current_date" % categoria
-    print(pd.read_sql(query, conn))
+    print_tables(query, conn)
+
     try:
-        inscribir = int(input("¿Deseas agendarte a alguna sesión?\n[1] Sí\n[2]No"))
+        inscribir = int(input("¿Deseas agendarte a alguna sesión?\n[1] Sí\n[2] No \n\t"))
         if inscribir == 1:
             eleccion = int(input("Ingrese el id de la sesión a la que desea conectarse \n\t"))
             return eleccion
@@ -235,11 +282,13 @@ def mostrar_sesiones_categoria(conn):
 
 def mostrar_sesiones_entrenador(conn, id_usuario):
     entrenador = solicitar_entrenador(conn)
-    query = """SELECT ses.id_sesion, cat.ejercicio, ses.fecha, ses.hora_inicio, ses.hora_fin, t.nombres||' '||t.apellidos "Instructor" """ \
+    query = """SELECT ses.id_sesion "ID Sesión", ses.Fecha, ses.hora_inicio "Hora de inicio", """ \
+            """ses.hora_fin "Hora de finalización", cat.ejercicio "Categoría", """ \
+            """t.nombres||' '||t.apellidos "Entrenador" """ \
             "from sesion_ejercicio ses inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria " \
             "                         inner join trabajador t on ses.instructor=t.id " \
             "WHERE t.id=%s and ses.fecha>=current_date" % entrenador
-    print(pd.read_sql(query, conn))
+    print_tables(query, conn)
     cursor = conn.cursor()
     cursor.execute("CALL bitacora_busqueda_usuario(%s, %s)", (id_usuario, entrenador))
     conn.commit()
@@ -272,7 +321,7 @@ def agendar_sesion(conn, id_usuario, id_sesion):
         querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
         descripcion = "El usuario %s creo un nuevo registro de sesion %s en sincronizacion_ejercicio" % (
             cursor.fetchone()[0], id_sesion)
-        data_bitacora = (id, 5, descripcion, 1)
+        data_bitacora = (id_usuario, 5, descripcion, 1)
         cursor.execute(querry_bitacora, data_bitacora)
         conn.commit()
     else:
@@ -280,20 +329,22 @@ def agendar_sesion(conn, id_usuario, id_sesion):
 
 
 def mis_sesiones_semanales(conn, id_usuario):
-    query = """SELECT ses.id_sesion, cat.ejercicio, ses.fecha, ses.hora_inicio, """ \
-            """ses.hora_fin, t.nombres||' '||t.apellidos "Instructor" """ \
+    query = """SELECT ses.id_sesion "ID Sesión", ses.Fecha, ses.hora_inicio "Hora de inicio", """ \
+            """ses.hora_fin "Hora de finalización", cat.ejercicio "Categoría", """ \
+            """t.nombres||' '||t.apellidos "Entrenador" """ \
             "from sincronizacion_ejercicio sinc inner join usuario us on sinc.id_usuario = us.id_usuario " \
             "                                   inner join sesion_ejercicio ses on sinc.id_sesion = ses.id_sesion " \
             "                                   inner join trabajador t on ses.instructor = t.id " \
             "inner join categoria_ejercicio cat on ses.categoria = cat.id_categoria " \
             "where ses.fecha > current_date + interval '-1 week' and sinc.id_usuario = %s" % id_usuario
-    print(pd.read_sql(query, conn))
+    print_tables(query, conn)
 
 
 def mis_sesiones_diarias(conn, id_usuario):
     cursor = conn.cursor()
-    query = """SELECT ses.id_sesion, cat.ejercicio, ses.fecha, ses.hora_inicio, ses.hora_fin, t.nombres||' 
-    '||t.apellidos "Instructor" """ \
+    query = """SELECT ses.id_sesion "ID Sesión", ses.Fecha, ses.hora_inicio "Hora de inicio", """ \
+            """ses.hora_fin "Hora de finalización", cat.ejercicio "Categoría", """ \
+            """t.nombres||' '||t.apellidos "Entrenador" """ \
             "from sincronizacion_ejercicio sinc inner join usuario us on sinc.id_usuario = us.id_usuario " \
             "inner join sesion_ejercicio ses on sinc.id_sesion = ses.id_sesion " \
             "inner join trabajador t on ses.instructor = t.id " \
@@ -304,7 +355,7 @@ def mis_sesiones_diarias(conn, id_usuario):
     if validation is None:
         print("No tienes sesiones el dia de hoy")
     else:
-        print(pd.read_sql(query, conn))
+        print_tables(query, conn)
         try:
             unirme = int(input("¿Deseas unirte a esta sesión?\n[1] Sí\n[2] No"))
             eleccion = 0
@@ -348,7 +399,7 @@ def mis_sesiones_diarias(conn, id_usuario):
                         cursor.execute(querry_bitacora, data_bitacora)
                         conn.commit()
                 else:
-                     print("Ya te has unido a esta sesion")
+                    print("Ya te has unido a esta sesion")
             else:
                 return False
         except ValueError:
