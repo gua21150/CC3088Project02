@@ -89,14 +89,11 @@ def menu_reporteria():
         return False
     
 def menu_simulacion():
-    print("\t\t Bienvenido al menú de simulación del programa iHealth+, para generar la simulación de un día de actividad deberá:  ")
-    print("\t\t Ingresar la fecha y cantidad de usuarios para la actividad:  ")
-    cantidad_usuarios_simulacion = int(input("Cantidad de usuarios: "))
-    ###fecha_actividad_simulacion
-
+    print("\t\t[1] Iniciar simulación ")
+    print("\t\t[2] Salir ")
     try:
         select = int(input("¿Cuál es tu selección?"))
-        if 1 <= select <= 6:
+        if 1 <= select <= 2:
             return select
         else:
             print("Opción no válida, se cerrará sesión")

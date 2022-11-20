@@ -63,10 +63,16 @@ def menu_principal_response(conn):
             elif resp1 == 5:  # hora pico
                 hora_pico(conn)
             elif resp1 is False:  # retornar
-                resp = 6  # termina el while
+                resp = 5  # termina el while
                 return 0
         elif resp == 5:  # simulación
+            resp1 = 0
             resp1 = menu.menu_simulacion()
+            if resp1 == 1: #realizar la simulacion 
+                simulacion(conn)
+            elif resp1 is False:  # retornar
+                resp = 2  # termina el while
+                return 0
         else:
             resp = 6  # para el while
             return 0  # retorna 0 porque desea cerrar sesion
