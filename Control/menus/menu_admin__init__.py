@@ -90,7 +90,6 @@ def menu_reporteria():
     
 def menu_simulacion():
     print("\t\t[1] Iniciar simulación ")
-    print("\t\t[2] Salir ")
     try:
         select = int(input("¿Cuál es tu selección?"))
         if 1 <= select <= 2:

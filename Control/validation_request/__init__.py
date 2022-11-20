@@ -406,3 +406,39 @@ def solicitar_ritmo_cardiaco_calorias():
         else:
             print("Las pulsaciones por minutos deben de estar entre 80 y 160\nSus calorias quemadas deben de ser superior a 0")
     return pul, cal
+
+
+def solicitar_hora_sesion_simulacion(argumento, anio_limite):
+    bandier = False
+    anio = ""
+    mes = ""
+    dat = ""
+    while bandier is False:
+        dat = input("Ingrese el año '%s' " % argumento)
+        try:
+            anio = int(dat)
+        except ValueError:
+            print("El dato ingresado no es numerico")
+
+        if 1950 <= anio <= anio_limite:
+            bandier = True
+        else:
+            print("El año '%s', debe de estar entre 1950 a 2022 " % argumento)
+
+    bandier = False
+    while bandier is False:
+        dat = input("Ingrese el mes '%s' " % argumento)
+        try:
+            mes = int(dat)
+        except ValueError:
+            print("El dato ingresado no es numerico")
+
+        if 1 <= mes <= 12:
+            bandier = True
+        else:
+            print("El mes '%s', debe de estar entre 1 a 12 " % argumento)
+            
+    return date(anio, mes)
+
+
+

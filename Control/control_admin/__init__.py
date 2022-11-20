@@ -1,4 +1,4 @@
-from Control.validation_request import connect_db, solicitar_datos_fecha
+from Control.validation_request import connect_db, solicitar_datos_fecha, solicitar_hora_sesion_simulacion
 import pandas as pd
 
 
@@ -92,8 +92,21 @@ def hora_pico(conn):
 def simulacion(conn):
     print("\t\t Bienvenido al menú de simulación del programa iHealth+, para generar la simulación de un día de actividad deberá:  ")
     print("\t\t Ingresar la fecha y cantidad de usuarios para la actividad:  ")
-    fecha2 = solicitar_datos_fecha("fecha de sesiones ", 2022)
-    query = "SELECT "
+    fecha = solicitar_datos_fecha("fecha de busqueda ", 2022)
+    query = "SELECT se.hora_inicio, COUNT(sin.id_usuario) total_personas, se.hora_fin, COUNT(sin.id_usuario) total_personas "\
+            "FROM sincronizacion_ejercicio sin INNER JOIN sesion_ejercicio se ON se.id_sesion = sin.id_sesion "\
+            "WHERE se.fecha = '%s' "\
+            "GROUP BY se.hora_inicio, se.hora_fin "\
+            "ORDER BY total_personas DESC LIMIT 3;" % fecha
+
+    result = pd.read_sql(query, conn)
+    print(result)
+    print("Ingrese la cantidad de usuarios que desea ingresar a las sesiones")
+    cantidad_usuarios = int(input("Cantidad de usuarios: "))
+    print ("Cantidad de usuarios: " ,cantidad_usuarios)
+    
+    if cantidad_usuarios > 0:
+            query = "INSERT INTO sesion_ejercicio"
    
         
 """Reporteria Proyecto 3"""
