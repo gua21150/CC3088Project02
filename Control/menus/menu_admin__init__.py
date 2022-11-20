@@ -5,11 +5,12 @@ def menu_principal():
     print("\t\t[3] Modificar a usuario")
     print("\t\t[4] Reportería de iHealth+")
     print("\t\t[5] Realizar Simulación")
-    print("\t\t[6] Cerrar sesión")
+    print("\t\t[6] Perfil de administradores")
+    print("\t\t[7] Cerrar sesión")
 
     try:
         select = int(input("¿Cuál es tu selección?"))
-        if 1 <= select <= 6:
+        if 1 <= select <= 7:
             return select
         else:
             print("Opción no válida, se cerrará sesión")
@@ -86,7 +87,7 @@ def menu_reporteria():
     print("\t\t[5] Conocer la hora pico en iHealth+ de una fecha ")
     print("\t\t[6] Bitacora actividad de usuarios ")
     print("\t\t[7] Bitacora actividad de administradores ")
-    print("\t\t[8] Regresar ")
+    print("\t\t[8] Retornar ")
 
     try:
         select = int(input("¿Cuál es tu selección?"))
@@ -113,4 +114,18 @@ def menu_simulacion():
         print("Opción no válida, se cerrará sesión")
         return False
     
-
+def menu_perfil_admin():
+    print("\t\t[1] Crear nuevo administrador")
+    print("\t\t[2] Activar permisos de administrador")
+    print("\t\t[3] Desactivar permisos de administrador")
+    print("\t\t[4] Retornar ")
+    try:
+        select = int(input("¿Cuál es tu selección?"))
+        if 1 <= select <= 4:
+            return select
+        else:
+            print("Opción no válida, se cerrará sesión")
+            return False
+    except ValueError:
+        print("Opción no válida, se cerrará sesión")
+        return False

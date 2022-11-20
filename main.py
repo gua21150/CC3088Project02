@@ -170,7 +170,7 @@ try:
                         elif rol_admin == 4:
                             conn = connect_db(4)  # admin que gestiona la reporteria
 
-                        while resp != 6:
+                        while resp != 7:
                             resp = menu.menu_principal()
                             if resp == 1:  # entrenadores
                                 resp1 = menu.menu_entrenadores()
@@ -296,7 +296,7 @@ try:
                                     elif resp1 == 7:  # bitacora admin
                                         bitacora_admin(conn)
                                     elif resp1 is False:  # retornar
-                                        resp = 5  # termina el while
+                                        resp = 7  # termina el while
                                         option = 0
                                 except psycopg2.errors.InsufficientPrivilege as e:
                                     print("No tienes permisos suficientes para esta acción")
@@ -306,8 +306,27 @@ try:
                             elif resp == 5:  # siomulacion
                                 resp1 = menu.menu_simulacion()
                                 simulacion(conn)
+                            elif resp == 6:  # perfiles de administrador
+                                resp1 = menu.menu_perfil_admin()
+                                try:
+                                    if resp1 == 1:  # crear administrador
+                                        crear_admin(conn, cod_admin, rol_admin)
+                                    elif resp1 == 2:  # activar administrador
+                                        print("Se le mostraran los administradores")
+                                        mostrar_administradores(conn)
+                                        admin_activo = solicitar_admins(conn, "activar")
+                                        activar_administrador(conn, admin_activo, cod_admin, rol_admin)
+                                    elif resp1 == 3:  # desactivar administrador
+                                        print("Se le mostraran los administradores")
+                                        mostrar_administradores(conn)
+                                        admin_desactivar = solicitar_admins(conn, "desactivar")
+                                        dar_baja_administrador(conn, admin_desactivar, cod_admin, rol_admin)
+                                except psycopg2.errors.InsufficientPrivilege as e:
+                                    print("No tienes permisos suficientes para esta acción")
+                                    conn.rollback()
+                                    pass
                             else:
-                                resp = 6  # para el while
+                                resp = 7  # para el while
                                 option = 0  # retorna 0 porque desea cerrar sesion
                     else:
                         print("No puedes acceder a esta sección")
@@ -335,4 +354,5 @@ except Exception as e:
 finally:
     conn.rollback()
     conn.close()
+
 
