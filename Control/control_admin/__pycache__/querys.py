@@ -24,4 +24,14 @@ def topinstructores(conn):
             "limit 10"
     print_tables(query, conn)
 
-
+"El top 5 de los administradores que más modificaciones realizan en las cuentas de usuario para un rango de fechas dado"
+def top5admin(conn):
+    fecha = solicitar_datos_fecha("fecha de busqueda ", 2022)
+    query = "Create view Reporteria3 as"\
+            "Select t.nombres nombres, t.apellidos apellidos, count(bit.id_admin) cambios_realizados, tipo.descripcion categoria, count(bit.id_accion)"\
+            "From trabajador t inner join bitacora_admin bit on t.id = bit.id_admin inner join tipo_accion tipo on bit.id_accion = tipo.id_accion"\
+            "where fecha_accion between '2022-10-15' and '2022-10-30'"\
+            "Group by nombres, apellidos, categoria"\
+            "order by cambios_realizados desc"\
+            "limit 5"
+    print_tables(query, conn)
