@@ -12,4 +12,16 @@ def topsesiones(conn):
 
     print_tables(query, conn)
 
-    
+"El top 10 de los instructores que los usuarios buscan para una semana dado (de lunes a domingo)"
+def topinstructores(conn):
+    fecha = solicitar_datos_fecha("fecha de busqueda ", 2022)
+    query = "Create view Reporteria2 as"\
+            "Select extract(week from fecha) as semana, t.nombres  || ' ' || t.apellidos instructor, count(bit.instructor) conteo"\
+            "From bitacora_usuario bit inner join trabajador t on bit.instructor = t.id"\
+            "where extract(week from fecha) = 46"\
+            "Group by semana, t.nombres, t.apellidos"\
+            "order by conteo desc"\
+            "limit 10"
+    print_tables(query, conn)
+
+
