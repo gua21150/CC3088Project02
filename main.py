@@ -242,7 +242,8 @@ try:
                                 resp = 5  # termina el while
                                 option = 0
                         elif resp == 5:  # siomulacion
-                            menu.menu_simulacion()
+                            resp1 = menu.menu_simulacion()
+                            simulacion(conn)
                         else:
                             resp = 6  # para el while
                             option = 0  # retorna 0 porque desea cerrar sesion

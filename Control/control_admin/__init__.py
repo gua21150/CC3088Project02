@@ -86,10 +86,13 @@ def hora_pico(conn):
     print(result)
 
     
-    
+  
+  
+"""SIMULACION"""  
 def simulacion(conn):
     print("\t\t Bienvenido al menú de simulación del programa iHealth+, para generar la simulación de un día de actividad deberá:  ")
     print("\t\t Ingresar la fecha y cantidad de usuarios para la actividad:  ")
-    fecha = solicitar_datos_fecha("fecha de sesiones ")
+    fecha2 = solicitar_datos_fecha("fecha de sesiones ", 2022)
+    query = "SELECT "
    
         
