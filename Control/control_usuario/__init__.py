@@ -1,5 +1,5 @@
 from datetime import date
-from Control.validation_request import solicitar_datos_fecha, connect_db, solicitar_password, solicitar_nombre_apellido, \
+from Control.validation_request import solicitar_datos_fecha, solicitar_password, solicitar_nombre_apellido, \
     print_tables
 
 """ solicitar datos para registrar un nuevo usuario """
@@ -250,7 +250,7 @@ def registrar_suscripcion(conn, id, tipo):
         data_bitacora = (id, 5, descripcion, 2)
         cursor.execute(querry_bitacora, data_bitacora)
         conn.commit()
-    conn = connect_db()
+
     cursor = conn.cursor()
     insert_script = "INSERT INTO usuario_suscripcion(id_usuario, id_suscripcion, activo, fecha_inicio) " \
                     "VALUES(%s,%s,%s,%s)"
@@ -288,7 +288,7 @@ def realizar_pago_suscripcion(conn, id_usuario):
     while bandier is True:
         while bandier1 is True:
             try:
-                cod_tarjeta = str(\
+                cod_tarjeta = str(
                     input("Ingrese el número de su tarjeta con la que realizará el pago "))
                 cvv = int(input("Ingrese el CVV de su tarjeta"))
                 if len(cod_tarjeta) > 0:
@@ -325,7 +325,6 @@ def realizar_pago_suscripcion(conn, id_usuario):
 """ funcion usada por usuario admin para poder desactivar un usuario """
 def desactivar_usuario(conn, id_usuario, id_admin, rol_admin):
     cursor = conn.cursor()
-    cursor = conn.cursor()
     cursor.execute("SELECT 1 FROM usuario_suscripcion WHERE id_usuario = %s AND activo = True" % id_usuario)
     validation = cursor.fetchone()
     if validation is not None:
@@ -344,7 +343,6 @@ def desactivar_usuario(conn, id_usuario, id_admin, rol_admin):
         cursor.execute(querry_bitacora, data_bitacora)
         conn.commit()
 
-        conn = connect_db()
         cursor = conn.cursor()
         query = "DELETE FROM pago WHERE id_usuario=%s "
         cursor.execute(query, query_value)

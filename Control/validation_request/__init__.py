@@ -6,15 +6,24 @@ from config import config
 
 """               REQUEST                      """
 """ CONECTAR A BASE DE DATOS"""
-def connect_db():
+def connect_db(opcion=7):
     # conexion a la base de datos
     try:
         # leer los paramatros del database.ini
-        params = config()
+        if opcion == 1:
+            params = config('database.ini', 'postgresql')
+        elif opcion == 2:
+            params = config('database_admin_u.ini', 'postgresql')
+        elif opcion == 3:
+            params = config('database_admin_sesion.ini', 'postgresql')
+        elif opcion == 4:
+            params = config('database_admin_reporteria.ini', 'postgresql')
+        elif opcion == 5:  # usuario
+            params = config('database_u.ini', 'postgresql')
+        else:
+            params = config('database.ini', 'postgresql')
         conn = psycopg2.connect(**params)
-        cursor = conn.cursor()
         print("Sesion a la base de datos ha sido exitosa")
-
         return conn
     except psycopg2.OperationalError:
         print("Alguna credencial no ha sido ingresada correctamente")

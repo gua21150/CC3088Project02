@@ -1,4 +1,4 @@
-from Control.validation_request import connect_db, solicitar_datos_fecha, print_tables
+from Control.validation_request import solicitar_datos_fecha, print_tables
 
 
 def iniciar_sesion_admin(conn, usern, passw):
@@ -41,7 +41,6 @@ def sesiones_fecha(conn):
             "group by ejercicio;" % (fecha_inicio, fecha_fin)
     print_tables(query, conn)
 
-    conn = connect_db()
     print("\t\tTotal de usuarios en las categorias de fechas entre %s y %s" % (fecha_inicio, fecha_fin))
     query = """select ejercicio "Categoría", count(sinc.id_usuario) "Total de usuarios" """ \
             "from categoria_ejercicio cat inner join sesion_ejercicio ses on cat.id_categoria = ses.categoria " \
