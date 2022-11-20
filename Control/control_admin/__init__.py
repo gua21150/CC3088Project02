@@ -88,8 +88,24 @@ def hora_pico(conn):
             "WHERE se.fecha = '%s' " \
             "GROUP BY se.hora_inicio, se.hora_fin " \
             """ORDER BY "Total de usuarios al principio" DESC LIMIT 3;""" % fecha
-
     print_tables(query, conn)
+
+
+    
+  
+  
+"""SIMULACION"""  
+def simulacion(conn):
+    print("\t\t Bienvenido al menú de simulación del programa iHealth+, para generar la simulación de un día de actividad deberá:  ")
+    print("\t\t Ingresar la fecha y cantidad de usuarios para la actividad:  ")
+    fecha2 = solicitar_datos_fecha("fecha de sesiones ", 2022)
+    query = "SELECT "
+   
+        
+"""Reporteria Proyecto 3"""
+"""El top 5 de las sesiones que mas usuarios tuvieron en cada hora entre 9:00 a.m a 6:00
+p.m para un día dado."""
+
 
 
 def bitacora_admin(conn):
