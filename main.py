@@ -164,20 +164,22 @@ try:
                 conn = connect_db()
                 id_admin = iniciar_sesion_admin(conn, correo, passw)
                 if id_admin is not False:
-                    resp = 1
+                    resp = 1  # menu principal de los admin
+                    cod_admin = id_admin[0]  # para el registro en bitacora
+                    rol_admin = id_admin[1]  # el rol del admin le da permisos en ciertas funciones
                     while resp != 6:
                         resp = menu.menu_principal()
                         if resp == 1:  # entrenadores
                             resp1 = menu.menu_entrenadores()
                             if resp1 == 1:  # agregar entrenador
                                 conn = connect_db()
-                                registrar_entrenador(conn)
+                                registrar_entrenador(conn, cod_admin, rol_admin)
                             elif resp1 == 2:  # dar de baja a entrenador
                                 conn = connect_db()
                                 mostrar_entrenadores(conn)  # se muestran los entrenadores
                                 id_entrenador = int(input("De los anteriores entrenadores, escriba el id del entrenador "))
                                 conn = connect_db()
-                                dar_baja_entrenador(conn, id_entrenador)
+                                dar_baja_entrenador(conn, id_entrenador, cod_admin, rol_admin)
                             elif resp1 is False:  # retornar
                                 resp = 5  # termina el while
                                 option = 0  # se cierra sesion automaticamente

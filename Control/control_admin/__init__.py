@@ -1,16 +1,17 @@
 from Control.validation_request import connect_db, solicitar_datos_fecha
 import pandas as pd
 
+
 def iniciar_sesion_admin(conn, usern, passw):
     cursor = conn.cursor()
-    query = "SELECT trabajador.id "\
+    query = "SELECT trabajador.id, rol "\
             "FROM trabajador "\
             "WHERE correo =%s AND passwordc=%s AND activo = True AND rol between 1 and 4"
     data = (usern, passw)
     cursor.execute(query, data)
     user_data = cursor.fetchone()
     if user_data != 'None':
-        return user_data[0]
+        return user_data
     else:
         return False
 
@@ -83,6 +84,7 @@ def hora_pico(conn):
 
     result = pd.read_sql(query, conn)
     print(result)
+
     
     
 def simulacion(conn):
