@@ -1,7 +1,6 @@
 # importacion de librerías
+import psycopg2.errors
 from psycopg2 import extensions
-
-from Control.validation_request import *
 from Control.menus import *
 from Control.menus.menu_usuario__init___ import *
 from Control.control_admin.admin_eleccion__init__ import *
@@ -114,12 +113,10 @@ try:
                                     if id_sesion is not False:
                                         try:
                                             agendar_sesion(conn, id_usuario, id_sesion)
-                                            print("Ha sido agregado a esta sesion")
                                         except psycopg2.errors.InsufficientPrivilege as e:
                                             print(e)
                                             conn.rollback()
                                             print("parece que has ingresado incorrectamente el id de la sesion")
-
                                 elif resp == 2:  # unirse a la sesion
                                     print("Estas son las sesiones de esta semana") # sesiones generales
                                     mis_sesiones_semanales(conn, id_usuario)

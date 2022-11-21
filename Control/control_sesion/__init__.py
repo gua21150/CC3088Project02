@@ -309,23 +309,29 @@ def mostrar_sesiones_entrenador(conn, id_usuario):
 
 def agendar_sesion(conn, id_usuario, id_sesion):
     cursor = conn.cursor()
-    cursor.execute("SELECT 1 FROM sincronizacion_ejercicio WHERE id_usuario=%s and id_sesion=%s",
-                   (id_usuario, id_sesion))
-    validation = cursor.fetchone()
-    if validation is None:
-        query = "INSERT INTO sincronizacion_ejercicio (id_usuario, id_sesion) VALUES (%s,%s)"
-        cursor.execute(query, (id_usuario, id_sesion))
-        conn.commit()
+    cursor.execute("SELECT 1 FROM sesion_ejercicio WHERE id_sesion=%s", (id_sesion,))
+    existe_sesion = cursor.fetchone()
+    if existe_sesion is not None:
+        cursor.execute("SELECT 1 FROM sincronizacion_ejercicio WHERE id_usuario=%s and id_sesion=%s",
+                       (id_usuario, id_sesion))
+        validation = cursor.fetchone()
+        if validation is None:
+            query = "INSERT INTO sincronizacion_ejercicio (id_usuario, id_sesion) VALUES (%s,%s)"
+            cursor.execute(query, (id_usuario, id_sesion))
+            conn.commit()
 
-        cursor.execute("SELECT obtener_nombre(%s, 5)" % id_usuario)
-        querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
-        descripcion = "El usuario %s creo un nuevo registro de sesion %s en sincronizacion_ejercicio" % (
-            cursor.fetchone()[0], id_sesion)
-        data_bitacora = (id_usuario, 5, descripcion, 1)
-        cursor.execute(querry_bitacora, data_bitacora)
-        conn.commit()
+            cursor.execute("SELECT obtener_nombre(%s, 5)" % id_usuario)
+            querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+            descripcion = "El usuario %s creo un nuevo registro de sesion %s en sincronizacion_ejercicio" % (
+                cursor.fetchone()[0], id_sesion)
+            data_bitacora = (id_usuario, 5, descripcion, 1)
+            cursor.execute(querry_bitacora, data_bitacora)
+            conn.commit()
+            print("Ha sido agregado a esta sesioó")
+        else:
+            print("Ya te encuentras agendado a esta sesión")
     else:
-        print("Ya te encuentras agendado a esta sesion")
+        print("Esta sesión no existe")
 
 
 def mis_sesiones_semanales(conn, id_usuario):
@@ -371,15 +377,17 @@ def mis_sesiones_diarias(conn, id_usuario):
                             break
 
                     if bandier is True:
-                        hi = i[3]
-                        hf = i[4]
+                        hi = i[2]
+                        hf = i[3]
                     else:
                         print("La sesion que indicas no es valida\nVuelve a intentar ingresar la sesion")
-                query = "SELECT 1 FROM sincronizacion_ejercicio WHERE calorias_quemadas=Null AND id_usuario=%s AND id_sesion=%s"
+                        break
+
+                query = "SELECT 1 FROM sincronizacion_ejercicio WHERE calorias_quemadas is Null AND id_usuario=%s AND id_sesion=%s"
                 cursor.execute(query, (id_usuario, eleccion))
                 validation = cursor.fetchone()
 
-                if validation is not None:
+                if (validation is not None) and (bandier is True):
                     print("Se te pediran los datos de tu sincronizacion a la sesion seleccionada")
                     hora = solicitar_hora_sincronizacion(hi, hf)
                     if hora is not False:
@@ -399,7 +407,7 @@ def mis_sesiones_diarias(conn, id_usuario):
                         cursor.execute(querry_bitacora, data_bitacora)
                         conn.commit()
                 else:
-                    print("Ya te has unido a esta sesion")
+                    print("Ya te has unido a esta sesión o no existe tu registro en la sesión")
             else:
                 return False
         except ValueError:

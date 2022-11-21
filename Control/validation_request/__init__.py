@@ -444,7 +444,7 @@ def print_tables(query, conn):
     cursor = conn.cursor()
     cursor.execute(query)  # ejecuta el query indicado
     data = cursor.fetchall()
-    if data is not None:
+    if len(data) != 0:
         colnames = [desc[0] for desc in cursor.description]  # el nombre de las columnas
         t = PrettyTable(colnames)  # las columnas en la tabla
         for info in data:
