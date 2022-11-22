@@ -55,9 +55,12 @@ CREATE ROLE admin_reporteria;
 ALTER ROLE admin_reporteria WITH LOGIN PASSWORD 'ad_reporteria';
     -- permisos de los usuarios
 -- permisos de los usuarios
+
+GRANT CREATE    ON SCHEMA public TO admin_reporteria;
+ALTER VIEW IF EXISTS reporteria3 OWNER TO admin_reporteria;
 GRANT SELECT    ON  sincronizacion_ejercicio, sesion_ejercicio, categoria_ejercicio, 
                     trabajador, usuario_suscripcion, bitacora_admin, bitacora_admin_usuarios, usuario,
-                    tipo_accion, bitacora_usuario
+                    tipo_accion, bitacora_usuario, reporteria1, reporteria2, reporteria3, reporteria4
                 TO  admin_reporteria;
 GRANT INSERT    ON  bitacora_admin
                 TO  admin_reporteria;
@@ -78,4 +81,3 @@ GRANT UPDATE    ON trabajador TO super_admin;
 GRANT EXECUTE   ON PROCEDURE bitacora_admin TO super_admin;
 GRANT EXECUTE   ON FUNCTION obtener_nombre TO super_admin;
 GRANT USAGE, SELECT, UPDATE ON SEQUENCE entrenador_sequence  TO super_admin;
-
