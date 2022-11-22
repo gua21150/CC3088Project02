@@ -33,8 +33,6 @@ def top5admin(conn):
     print_tables(query, conn)
 
 
-
-
 "El top 20 de usuarios que llevan más de tres semanas sin realizar ejercicio"
 def usuariosinactivos(conn): 
         query = """Select usuarios "Nombre usuario", ultima_sesion "Ultima sesion agendada" """\
