@@ -1,3 +1,7 @@
+import datetime
+import random
+
+import psycopg2
 from Control.validation_request import connect_db, solicitar_datos_fecha, solicitar_hora_sesion_simulacion
 import pandas as pd
 from Control.validation_request import solicitar_datos_fecha, print_tables, solicitar_credenciales
@@ -94,32 +98,53 @@ def hora_pico(conn):
     print_tables(query, conn)
 
 
+
 """SIMULACION"""
 
 
 def simulacion(conn):
-    print(
-        "\t\t Bienvenido al menú de simulación del programa iHealth+, para generar la simulación de un día de actividad deberá:  ")
-    print("\t\t Ingresar la fecha y cantidad de usuarios para la actividad:  ")
-    fecha = solicitar_datos_fecha("fecha de busqueda ", 2022)
-    query = "SELECT se.hora_inicio, COUNT(sin.id_usuario) total_personas, se.hora_fin, COUNT(sin.id_usuario) total_personas "\
-            "FROM sincronizacion_ejercicio sin INNER JOIN sesion_ejercicio se ON se.id_sesion = sin.id_sesion "\
-            "WHERE se.fecha = '%s' "\
-            "GROUP BY se.hora_inicio, se.hora_fin "\
-            "ORDER BY total_personas DESC LIMIT 3;" % fecha
-
-    result = pd.read_sql(query, conn)
-    print(result)
-    print("Ingrese la cantidad de usuarios que desea ingresar a las sesiones")
-    cantidad_usuarios = int(input("Cantidad de usuarios: "))
-    print ("Cantidad de usuarios: " ,cantidad_usuarios)
-    
-    if cantidad_usuarios > 0:
-            query = "INSERT INTO sesion_ejercicio"
-   
         
-    fecha2 = solicitar_datos_fecha("fecha de sesiones ", 2022)
-    query = "SELECT "
+    print("\t\t Bienvenido al menú de simulación del programa iHealth+, para generar la simulación de un día de actividad deberá:  ")
+    print("\t\t Ingresar la fecha y cantidad de usuarios para la actividad:  ")
+    
+    simFecha = int(input("Ingrese la fecha (YYYY/M/D)"))
+    cantidad = int(input("Ingrese la cantidad de usuarios que desea ingresar: " ))
+    
+    fecha = datetime.strptime(simFecha.get(), '%Y-%m-%d')
+    
+    cursor = conn.cursor()
+
+    cursor.execute('''SELECT nombres FROM trabajador WHERE rol = 6''')
+
+    listaInstructor = [item for t in cursor.fetchall() for item in t]
+
+    cursor = conn.cursor()
+
+    cursor.execute('''SELECT id_usuario FROM usuario %s''', cantidad)
+
+    prevListaCat = ['Aerobicos', 'Zumba', 'Salsa', 'Pesas' , 'Cardio', 'Yoga', 'Fortalecimiento', 'Resistencia']
+    listaUsuario = [item for t in cursor.fetchall() for item in t]
+    listaInicio = []
+    listaFin = []
+    listaCat = []
+    listaCal = []
+    listaRitmo = []
+
+    for n in range(cantidad):
+            print(1)
+            inicio = fecha.replace(hour=random.randint(6,22), minute=random.randint(0,59))
+            fin = inicio + datetime.timedelta(minutes=random.randint(30,60))
+            cat = random.choice(prevListaCat)
+            cal = random.randint(150,300)
+            ritmo = random.randint(110,180)
+
+            listaInicio.append(inicio)
+            listaFin.append(fin)
+            listaCat.append(cat)
+            listaCal.append(cal)
+            listaRitmo.append(ritmo)
+        
+    data = list(zip(listaUsuario,listaInicio,listaFin,listaCat,listaInstructor,listaCal,listaRitmo))
 
 
 
