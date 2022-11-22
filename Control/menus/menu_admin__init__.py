@@ -87,15 +87,15 @@ def menu_reporteria():
     print("\t\t[5] Conocer la hora pico en iHealth+ de una fecha ")
     print("\t\t[6] Bitacora actividad de usuarios ")
     print("\t\t[7] Bitacora actividad de administradores ")
-    print("\t\t[8] El top 5 de las sesiones que mas usuarios tuvieron en cada hora para un día dado.")
-    print("\t\t[9] El top 10 de los instructores que los usuarios buscan para una semana dado ")
-    print("\t\t[10] El top 5 de los administradores que más modificaciones realizan en las cuentas de usuario")
-    print("\t\t[11] El top 20 de usuarios que llevan más de tres semanas sin realizar ejercicio.")
+    print("\t\t[8] Top 5 sesiones con más usuarios en horas registradas")
+    print("\t\t[9] Top 10 entrenadores más solicitados ")
+    print("\t\t[10] Top 5 administradores que modifican cuentas de usuario")
+    print("\t\t[11] Top 20 de usuarios sin realizar ejercicio")
     print("\t\t[12] Retornar ")
 
     try:
         select = int(input("¿Cuál es tu selección?"))
-        if 1 <= select <= 8:
+        if 1 <= select <= 12:
             return select
         else:
             print("Opción no válida, se cerrará sesión")

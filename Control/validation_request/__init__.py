@@ -490,14 +490,6 @@ def print_tables(query, conn):
         print("No hay registros sobre el dato que deseas ver")
 
 
-
-    colnames = [desc[0] for desc in cursor.description]  # el nombre de las columnas
-    t = PrettyTable(colnames)  # las columnas en la tabla
-    for info in data:
-        t.add_row(info)  # las filas en la tabla
-    print(t)
-
-
 """ solicitar datos para registrar un nuevo trabajador """
 
 

@@ -292,13 +292,13 @@ try:
                                         bitacora_usuario(conn)
                                     elif resp1 == 7:  # bitacora admin
                                         bitacora_admin(conn)
-                                    elif resp1 ==8: #Top sesiones con mas usuarios
+                                    elif resp1 == 8: #Top sesiones con mas usuarios
                                         topsesiones(conn)
-                                    elif resp1 ==9: #Top instructores
+                                    elif resp1 == 9: #Top instructores
                                         topinstructores(conn)
-                                    elif resp1==10: #Top 5 admin con mas cambios
+                                    elif resp1 == 10: #Top 5 admin con mas cambios
                                         top5admin(conn)
-                                    elif resp1==11: #Top 20 usuarios inactivos
+                                    elif resp1 == 11: #Top 20 usuarios inactivos
                                         usuariosinactivos(conn)
                                     elif resp1 is False:  # retornar
                                         resp = 7  # termina el while
