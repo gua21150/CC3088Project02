@@ -1,6 +1,6 @@
 import psycopg2
 from calendar import monthrange
-from datetime import date
+from datetime import date, time
 from prettytable import PrettyTable
 from config import config
 import random
@@ -555,7 +555,7 @@ def solicitar_admins(conn, argumento):
     return ent
 
 def random_hour():
-    hora = random.randint(0, 23)  # genera una hora entre 0 am y 23 pm
+    hora = random.randint(0, 22)  # genera una hora entre 0 am y 22 pm
     min = random.randint(0, 59)  # genera la hora de inicio
     hora_inicio = time(hora, min)
     hora_final = time(hora+1, min)

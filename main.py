@@ -314,7 +314,7 @@ try:
                                     if resp1 == 1:
                                         simulacion(conn)
                                     elif resp1 == 2:
-                                        simulacion_mariel(conn, cod_admin, rol)
+                                        simulacion_mariel(conn, cod_admin, rol_admin)
                                 except psycopg2.errors.InsufficientPrivilege as e:
                                     print("No tienes permisos suficientes para esta acción")
                                     conn.rollback()

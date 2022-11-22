@@ -269,8 +269,8 @@ def registrar_suscripcion(conn, id, tipo):
 
 def validar_cvv(conn, cod_tarjeta):
     cursor = conn.cursor()
-    select_script = "SELECT cvv FROM metodo_pago WHERE cod_tarjeta='%s' " % str(cod_tarjeta)
-    cursor.execute(select_script)
+    select_script = "SELECT cvv FROM metodo_pago WHERE cod_tarjeta=%s"
+    cursor.execute(select_script, (str(cod_tarjeta),))
     value = cursor.fetchone()
 
     if value is None:  # no hay tarjetas con este codigo
@@ -288,8 +288,7 @@ def realizar_pago_suscripcion(conn, id_usuario):
     while bandier is True:
         while bandier1 is True:
             try:
-                cod_tarjeta = str(
-                    input("Ingrese el número de su tarjeta con la que realizará el pago "))
+                cod_tarjeta = str(input("Ingrese el número de su tarjeta con la que realizará el pago "))
                 cvv = int(input("Ingrese el CVV de su tarjeta"))
                 if len(cod_tarjeta) > 0:
                     bandier1 = False

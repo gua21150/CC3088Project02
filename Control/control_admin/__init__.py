@@ -356,8 +356,8 @@ def asignar_usario_simulacion(conn, asignacion, usuarios, sesiones, id_admin, ro
 def simulacion_mariel(conn, id_admin, rol):
     fecha = solicitar_datos_fecha("del día de simulación", 2022)
     cantidad_usuarios = int(input("Ingresa la cantidad de usuarios "))
-    cantidad_sesiones = int(input("Ingresa la cantidad de sesiones "))
-
+    #cantidad_sesiones = int(input("Ingresa la cantidad de sesiones "))
+    cantidad_sesiones = 5
     if (fecha is not False) and cantidad_sesiones>0 and cantidad_usuarios>0:
         i = 0
         id_sesiones = []
