@@ -1,7 +1,7 @@
 "El top 5 de las sesiones que mas usuarios tuvieron en cada hora entre 9:00 a.m a 6:00 p.m para un día dado."
 def topsesiones(conn):
     fecha = solicitar_datos_fecha("fecha de busqueda ", 2022)
-    query ="""Select se.fecha "Fecha", rep.id_sesion "Sesion, rep.Hora "Hora", rep.usuarios "Cantidad de usuarios", rep.instructores "Instructor", rep.categoria "Categoria de la Sesion"""""\
+    query ="""Select se.fecha "Fecha", rep.id_sesion "Sesion", rep.Hora "Hora", rep.usuarios "Cantidad de usuarios", rep.instructores "Instructor", rep.categoria "Categoria de la Sesion"""""\
         "From Reporteria1 rep inner join sesion_ejercicio se on rep.id_sesion = se.id_sesion"\
         "Where se.fecha = '2022-10-13'"\
         "Order by usuarios desc"\
@@ -33,12 +33,8 @@ def top5admin(conn):
 "El top 20 de usuarios que llevan más de tres semanas sin realizar ejercicio"
 def usuariosinactivos(conn):
         fecha = solicitar_datos_fecha("fecha de busqueda ", 2022)
-        query = "Select u.nombres || ' '|| u.apellidos usuario, ses.fecha ultima_sesion"\
-                "From sesion_ejercicio ses inner join sincronizacion_ejercicio sinc on ses.id_sesion = sinc.id_sesion inner join usuario u on sinc.id_usuario = u.id_usuario"\
-                "Where not exists (Select usuario.id_usuario"\
-                        "From usuario inner join sincronizacion_ejercicio on usuario.id_usuario = sincronizacion_ejercicio.id_usuario inner join sesion_ejercicio on sincronizacion_ejercicio.id_sesion = sesion_ejercicio.id_sesion"\
-                        "Where sesion_ejercicio.fecha <  current_date - interval '3 weeks')"\
-                "Group by nombres, apellidos, ultima_sesion"\
-                "order by ultima_sesion asc"\
-                "limit 20"
+        query = """Select usuarios "Nombre usuario", ultima_sesion "Ultima sesion agendada"""""\
+        "From Reporteria4"\
+        "Order by ultima_sesion desc"\
+        "limit 20"
         print_tables(query, conn)
