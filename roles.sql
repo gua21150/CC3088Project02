@@ -73,7 +73,7 @@ CREATE ROLE super_admin;
 ALTER ROLE super_admin WITH LOGIN PASSWORD 'superman';
     -- permisos de los usuarios
 -- permisos de los usuarios
-GRANT SELECT    ON  trabajador, tipo_rol
+GRANT SELECT    ON  trabajador, tipo_rol, usuario
                 TO  super_admin;
 GRANT INSERT    ON  bitacora_admin, trabajador
                 TO  super_admin;
