@@ -1,14 +1,11 @@
 "El top 5 de las sesiones que mas usuarios tuvieron en cada hora entre 9:00 a.m a 6:00 p.m para un día dado."
 def topsesiones(conn):
     fecha = solicitar_datos_fecha("fecha de busqueda ", 2022)
-    query = """Select (extract(hour from s.hora_inicio)::VARCHAR) || ":00:00 -" ||(extract(hour from s.hora_inicio)+1)::VARCHAR||
-            ":00:00" "HORA", s.id_sesion, count(extract(hour from sinc.hora_inicio)) usuarios, t.nombres ||""|| t.apellidos instructros, cat.ejercicio categoria"""\
-            "From sesion_ejercicio s inner join trabajador t on s.instructor = t.id inner join sincronizacion_ejercicio sinc on s.id_sesion = sinc.id_sesion inner join categoria_ejercicio cat on cat.id_categoria = s.categoria" \
-            "where s.fecha = '%s' and extract(hour from sinc.hora_inicio) between 9 and 18"\
-            "Group by s.id_sesion, t.nombres, t.apellidos, s.hora_inicio, cat.ejercicio"\
-            "order by usuarios desc"\
-            "limit 5"
-
+    query ="""Select se.fecha "Fecha", rep.id_sesion "Sesion, rep.Hora "Hora", rep.usuarios "Cantidad de usuarios", rep.instructores "Instructor", rep.categoria "Categoria de la Sesion"""""\
+        "From Reporteria1 rep inner join sesion_ejercicio se on rep.id_sesion = se.id_sesion"\
+        "Where se.fecha = '2022-10-13'"\
+        "Order by usuarios desc"\
+        "limit 5"
     print_tables(query, conn)
 
 "El top 10 de los instructores que los usuarios buscan para una semana dado (de lunes a domingo)"
