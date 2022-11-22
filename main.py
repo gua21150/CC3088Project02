@@ -310,7 +310,16 @@ try:
 
                             elif resp == 5:  # siomulacion
                                 resp1 = menu.menu_simulacion()
-                                simulacion(conn)
+                                try:
+                                    if resp1 == 1:
+                                        simulacion(conn)
+                                    elif resp1 == 2:
+                                        simulacion_mariel(conn, cod_admin, rol)
+                                except psycopg2.errors.InsufficientPrivilege as e:
+                                    print("No tienes permisos suficientes para esta acción")
+                                    conn.rollback()
+                                    pass
+
                             elif resp == 6:  # perfiles de administrador
                                 resp1 = menu.menu_perfil_admin()
                                 try:

@@ -3,7 +3,7 @@ from calendar import monthrange
 from datetime import date
 from prettytable import PrettyTable
 from config import config
-
+import random
 """               REQUEST                      """
 """ CONECTAR A BASE DE DATOS"""
 
@@ -554,6 +554,51 @@ def solicitar_admins(conn, argumento):
             print("El id ingresado no pertenece a ni un administrador valido")
     return ent
 
+def random_hour():
+    hora = random.randint(0, 23)  # genera una hora entre 0 am y 23 pm
+    min = random.randint(0, 59)  # genera la hora de inicio
+    hora_inicio = time(hora, min)
+    hora_final = time(hora+1, min)
+    return hora_inicio, hora_final
 
+def random_categoria():
+    categoria = random.randint(1, 4)
+    return categoria
 
+def random_instructor(conn, hi, hf, fecha):
+    query = """SELECT distinct(trab.id) """ \
+            "FROM trabajador trab " \
+            "WHERE trab.id NOT IN ( " \
+            "                        SELECT instructor FROM sesion_ejercicio " \
+            "                        WHERE ((EXTRACT(HOUR FROM hora_inicio))" \
+            "                        BETWEEN EXTRACT(HOUR FROM time%s) AND EXTRACT(HOUR FROM time %s)) AND " \
+            "                       ((EXTRACT(HOUR FROM hora_fin)) " \
+            "                       BETWEEN EXTRACT(HOUR FROM time%s) AND EXTRACT(HOUR FROM time %s))" \
+            "                       AND (fecha = %s) " \
+            "                      )  AND trab.activo = True AND trab.rol=6 """
+    cursor = conn.cursor()
+    cursor.execute(query, (hi, hf, hi, hf, fecha))
+    data = cursor.fetchall()
+    if data is not None:
+        instructores = []
+        for i in data:
+            instructores.append(i[0])
+        cantidad_instructores = len(instructores) - 1
+        posible_instructor = random.randint(0, cantidad_instructores)
+        instructor = instructores[posible_instructor]
+        return instructor
+    else:
+        return False
 
+def random_usuario(conn):
+    query = "select usuario.id_usuario from usuario inner join usuario_suscripcion us on usuario.id_usuario = us.id_usuario where us.activo = true"
+    cursor = conn.cursor()
+    cursor.execute(query)
+    data = cursor.fetchall()
+    if data is not None:
+        usuarios = []
+        for i in data:
+            usuarios.append(i[0])
+        return usuarios
+    else:
+        return False

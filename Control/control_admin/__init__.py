@@ -2,7 +2,8 @@ import datetime
 import random
 
 import psycopg2
-from Control.validation_request import connect_db, solicitar_datos_fecha, solicitar_hora_sesion_simulacion
+from Control.validation_request import connect_db, solicitar_datos_fecha, solicitar_hora_sesion_simulacion, \
+    random_usuario, random_instructor, random_hour, random_categoria
 import pandas as pd
 from Control.validation_request import solicitar_datos_fecha, print_tables, solicitar_credenciales
 
@@ -316,3 +317,91 @@ def usuariosinactivos(conn):
         "Order by ultima_sesion desc "\
         "limit 20"
         print_tables(query, conn)
+
+
+def asignar_usario_simulacion(conn, asignacion, usuarios, sesiones, id_admin, rol):
+    i = 0
+    while i != asignacion:
+        cantidad_usuarios = len(usuarios) - 1
+        posible_usuario = random.randint(0, cantidad_usuarios)
+        id_usuario = usuarios[posible_usuario]
+        id_sesion = sesiones[random.randint(0, len(sesiones)-1)]  # sesion a la que es asignado el usuario
+
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1 FROM sincronizacion_ejercicio WHERE id_usuario=%s and id_sesion=%s", (id_usuario, id_sesion))
+        validation = cursor.fetchone()
+        if validation is None:
+            query = "SELECT hora_inicio, hora_fin FROM sesion_ejercicio WHERE id_sesion=%s"
+            cursor.execute(query, (id_sesion, ))
+            hora = cursor.fetchone()
+            hi = hora[0]
+            hf = hora[1]
+
+            query = "INSERT INTO sincronizacion_ejercicio (id_usuario, id_sesion, hora_inicio, hora_fin, calorias_quemadas, ritmo_cardiaco) VALUES (%s,%s,%s,%s,%s,%s)"
+            pul = round(random.uniform(80.00, 160.00), 2)
+            cal = round(random.uniform(200.00, 1000.00), 2)
+            cursor.execute(query, (id_usuario, id_sesion, hi, hf, cal, pul))
+            conn.commit()
+
+            cursor.execute("SELECT obtener_nombre(%s, %s)" % (id_admin, rol))
+            querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+            descripcion = "El administrador %s creó un nuevo registro de sesión en %s en sincronizacion_ejercicio como parte de simulación" % (
+                cursor.fetchone()[0], id_sesion)
+            data_bitacora = (id_admin, rol, descripcion, 1)
+            cursor.execute(querry_bitacora, data_bitacora)
+            conn.commit()
+
+        i = i + 1
+
+def simulacion_mariel(conn, id_admin, rol):
+    fecha = solicitar_datos_fecha("del día de simulación", 2022)
+    cantidad_usuarios = int(input("Ingresa la cantidad de usuarios "))
+    cantidad_sesiones = int(input("Ingresa la cantidad de sesiones "))
+
+    if (fecha is not False) and cantidad_sesiones>0 and cantidad_usuarios>0:
+        i = 0
+        id_sesiones = []
+
+        while i != cantidad_sesiones:
+            hora_inicio, hora_final = random_hour()
+            entrenador = random_instructor(conn, hora_inicio, hora_final, fecha)
+            categoria = random_categoria()
+
+            if entrenador is not False:
+                cursor = conn.cursor()  # se conecta a la base de datos
+                # realizar nuevo codigo de usuario
+                selection = "SELECT nextval('sesion_sequence')"
+                cursor.execute(selection)  # ultimo usuario
+                id_sesion = cursor.fetchone()
+                id_u = id_sesion[0]
+                id_sesiones.append(id_u)  # se guardan las sesiones agregadas
+                # insercion de dato
+                insert_script = "INSERT INTO sesion_ejercicio(id_sesion, fecha, hora_inicio, hora_fin, duracion, instructor, " \
+                                "categoria) VALUES(%s,%s,%s,%s,%s,%s,%s)"
+                insert_values = (id_u, fecha, hora_inicio, hora_final, 60, entrenador, categoria)
+                cursor.execute(insert_script, insert_values)
+                conn.commit()
+                # registro en bitacora
+                cursor.execute("SELECT obtener_nombre(%s,%s)" % (id_admin, rol))
+                admin_name = cursor.fetchone()[0]
+                querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+                descripcion = "El administrador %s creó la sesión %s durante simulación" % (admin_name, id_u)
+                data_bitacora = (id_admin, rol, descripcion, 1)
+                cursor.execute(querry_bitacora, data_bitacora)
+                conn.commit()
+                i = i+1
+            else:
+                break
+
+        usuarios_disponibles = random_usuario(conn)
+        if usuarios_disponibles is not False:
+            cantidad_u_dis = len(usuarios_disponibles)
+            if cantidad_u_dis < cantidad_usuarios:
+                print("Hay menos usuarios disponibles que los ingresados, se hara la simulacion con %s usuarios" % cantidad_u_dis)
+
+            asignar_usario_simulacion(conn, cantidad_usuarios, usuarios_disponibles, id_sesiones, id_admin, rol)
+            query = "SELECT * from "
+        else:
+            print("No hay usuarios disponibles para esta simulacion")
+    else:
+        print("El dato de fecha no es correcto")
