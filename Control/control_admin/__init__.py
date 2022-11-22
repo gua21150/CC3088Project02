@@ -1,7 +1,7 @@
-
 from Control.validation_request import connect_db, solicitar_datos_fecha, solicitar_hora_sesion_simulacion
 import pandas as pd
-from Control.validation_request import solicitar_datos_fecha, print_tables
+from Control.validation_request import solicitar_datos_fecha, print_tables, solicitar_credenciales
+
 
 
 
@@ -94,12 +94,12 @@ def hora_pico(conn):
     print_tables(query, conn)
 
 
-    
-  
-  
-"""SIMULACION"""  
+"""SIMULACION"""
+
+
 def simulacion(conn):
-    print("\t\t Bienvenido al menú de simulación del programa iHealth+, para generar la simulación de un día de actividad deberá:  ")
+    print(
+        "\t\t Bienvenido al menú de simulación del programa iHealth+, para generar la simulación de un día de actividad deberá:  ")
     print("\t\t Ingresar la fecha y cantidad de usuarios para la actividad:  ")
     fecha = solicitar_datos_fecha("fecha de busqueda ", 2022)
     query = "SELECT se.hora_inicio, COUNT(sin.id_usuario) total_personas, se.hora_fin, COUNT(sin.id_usuario) total_personas "\
@@ -118,10 +118,14 @@ def simulacion(conn):
             query = "INSERT INTO sesion_ejercicio"
    
         
-"""Reporteria Proyecto 3"""
+    fecha2 = solicitar_datos_fecha("fecha de sesiones ", 2022)
+    query = "SELECT "
+
+
+
+"""Reporteria Proyecto 3""" 
 """El top 5 de las sesiones que mas usuarios tuvieron en cada hora entre 9:00 a.m a 6:00
 p.m para un día dado."""
-
 
 
 def bitacora_admin(conn):
@@ -145,5 +149,100 @@ def bitacora_usuario(conn):
     print_tables(query, conn)
 
 
-def crear_admin():
-    print("Creacion del admin")
+"""" Muestra los administradores dentro de la base de datos"""
+
+
+def mostrar_administradores(conn):
+    query = """SELECT id "ID", nombres||' '||apellidos "Nombre Admin", correo "Correo", """ \
+            """activo "Estado de actividad", tr.rol "Tipo de rol" """ \
+            """FROM trabajador INNER JOIN tipo_rol tr on trabajador.rol = tr.cod_rol WHERE trabajador.rol BETWEEN 2 AND 4"""
+    print_tables(query, conn)
+
+
+""" creacion de cuentas de administrador """
+
+
+def crear_admin(conn, id_admin, rol):
+    data = solicitar_credenciales(conn, "del administrador", 2)
+
+    if data is not False:
+        cursor = conn.cursor()  # se conecta a la base de datos
+        # realizar nuevo codigo de usuario
+        selection = "SELECT nextval('entrenador_sequence')"
+        cursor.execute(selection)  # ultimo id de trabajador
+        id_trab = cursor.fetchone()
+        id_t = id_trab[0]
+        # insercion de dato
+        insert_script = "INSERT INTO trabajador(id, nombres, apellidos, correo, passwordc, activo, rol) " \
+                        "VALUES(%s,%s,%s,%s,%s,%s,%s)"
+        insert_values = (id_t, data[0], data[1], data[2], data[3], data[4], data[5])
+        cursor.execute(insert_script, insert_values)
+        conn.commit()
+
+        cursor.execute("SELECT obtener_nombre(%s,%s)" % (id_admin, rol))
+        admin = cursor.fetchone()[0]
+        querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+        descripcion = "El administrador %s creo la cuenta del nuevo administrador %s" % (
+            admin, data[0] + ' ' + data[1])
+        data_bitacora = (id_admin, rol, descripcion, 1)
+        cursor.execute(querry_bitacora, data_bitacora)
+        conn.commit()
+        print("Registro realizado\nSe mostraran los administradores")
+        mostrar_administradores(conn)
+    else:
+        print("Tus datos no son validos")
+
+
+"""" dar de baja a un administrador """
+def dar_baja_administrador(conn, id_trabajador, id_admin, rol_admin):
+    cursor = conn.cursor()
+    cursor.execute("SELECT rol FROM trabajador WHERE id = %s AND activo = True AND rol!=1" % id_trabajador)
+    validation = cursor.fetchone()
+    if validation is not None:
+        query = "UPDATE trabajador set activo = False where id = %s" % id_trabajador
+        cursor.execute(query)
+        conn.commit()
+
+        # registro en bitacora
+        rol_trabajador = validation[0]
+        cursor.execute("SELECT obtener_nombre(%s,%s)", (id_admin, rol_admin))
+        admin_name = cursor.fetchone()[0]
+        cursor.execute("SELECT obtener_nombre(%s,%s)", (id_trabajador, rol_trabajador))
+        trab_name = cursor.fetchone()[0]
+        querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+        descripcion = "El administrador %s modifico el estado de actividad del entrenador %s a INACTIVO" % (
+        admin_name, trab_name)
+        data_bitacora = (id_admin, rol_admin, descripcion, 2)
+        cursor.execute(querry_bitacora, data_bitacora)
+        conn.commit()
+        print("Se ha desactivado al administrador\nA continuación puede ver el cambio")
+        mostrar_administradores(conn)
+    else:
+        print("Este administrador ya se encuentra INACTIVO o no puede desactivar este admin")
+
+
+def activar_administrador(conn, id_trabajador, id_admin, rol_admin):
+    cursor = conn.cursor()
+    cursor.execute("SELECT rol FROM trabajador WHERE id = %s AND activo = False" % id_trabajador)
+    validation = cursor.fetchone()
+    if validation is not None:
+        query = "UPDATE trabajador set activo = True WHERE id = %s" % id_trabajador
+        cursor.execute(query)
+        conn.commit()
+
+        # registro en bitacora
+        rol_trabajador = validation[0]
+        cursor.execute("SELECT obtener_nombre(%s,%s)", (id_admin, rol_admin))
+        admin_name = cursor.fetchone()[0]
+        cursor.execute("SELECT obtener_nombre(%s,%s)", (id_trabajador, rol_trabajador))
+        trab_name = cursor.fetchone()[0]
+        querry_bitacora = "CALL bitacora_admin(%s, %s, %s, %s);"
+        descripcion = "El administrador %s modifico el estado de actividad del administrador %s a ACTIVO" % (
+        admin_name, trab_name)
+        data_bitacora = (id_admin, rol_admin, descripcion, 2)
+        cursor.execute(querry_bitacora, data_bitacora)
+        conn.commit()
+        print("Se ha desactivado al entrenador\nA continuación puede ver el cambio")
+        mostrar_administradores(conn)
+    else:
+        print("Este administrador ya se encuentra ACTIVO o no puede activar este admin")

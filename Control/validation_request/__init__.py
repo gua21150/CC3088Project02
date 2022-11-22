@@ -6,6 +6,8 @@ from config import config
 
 """               REQUEST                      """
 """ CONECTAR A BASE DE DATOS"""
+
+
 def connect_db(opcion=7):
     # conexion a la base de datos
     try:
@@ -188,7 +190,6 @@ def solicitar_hora_busqueda(argumento):
         else:
             print("La hora '%s', debe de estar entre 0 y 23 " % argumento)
 
-
     bandier = False
     while bandier is False:
         dat = input("Ingrese los minutos '%s' " % argumento)
@@ -349,7 +350,8 @@ def solicitar_hora_sincronizacion(hi, hf):
             bandier = True
         else:
             print(
-                "La hora a la que se retiro debe de estar entre %s y %s y debe ser mayor que su hora de inicio" % (hi, hf))
+                "La hora a la que se retiro debe de estar entre %s y %s y debe ser mayor que su hora de inicio" % (
+                    hi, hf))
 
     bandier = False
     while bandier is False:
@@ -367,7 +369,7 @@ def solicitar_hora_sincronizacion(hi, hf):
     hora_i_minutos = (hora_i * 60) + min_i
     hora_f_minutos = (hora_f * 60) + min_f
     total_tiempo = hora_f_minutos - hora_i_minutos
-    if (hora_f_minutos >= hora_i_minutos):
+    if hora_f_minutos >= hora_i_minutos:
         return ("%s:%s" % (hora_i, min_i)), ("%s:%s" % (hora_f, min_f))
     else:
         print("Los datos ingresados no cumplen con que la hora de fin sea mayor a la hora de inicio")
@@ -379,7 +381,8 @@ def solicitar_ritmo_cardiaco_calorias():
     pul = 0
     cal = 0
     while bandier is False:
-        dat = input("Ingrese su frencuencia cardiaca despues de ejercitarse\nDebe de estar en un rango de 80 y 160 pulsaciones por minuto")
+        dat = input(
+            "Ingrese su frencuencia cardiaca despues de ejercitarse\nDebe de estar en un rango de 80 y 160 pulsaciones por minuto")
         dat2 = input("Ingrese las calorias quemadas")
         try:
             pul = float(dat)
@@ -389,7 +392,8 @@ def solicitar_ritmo_cardiaco_calorias():
         if (80 <= pul <= 160) and (0 < cal):
             bandier = True
         else:
-            print("Las pulsaciones por minutos deben de estar entre 80 y 160\nSus calorias quemadas deben de ser superior a 0")
+            print(
+                "Las pulsaciones por minutos deben de estar entre 80 y 160\nSus calorias quemadas deben de ser superior a 0")
     return pul, cal
 
 
@@ -433,19 +437,19 @@ def solicitar_nombre_apellido(option):
     bandier = False
     nombres = ""
     apellidos = ""
-    if option == 1: # cambiar nombre
+    if option == 1:  # cambiar nombre
         while bandier is False:
             nombres = str(input("¿Cuáles son sus nombres?"))
             if nombres.isspace() is False:
                 bandier = True
         return nombres
-    elif option == 2: # cambiar apellido
+    elif option == 2:  # cambiar apellido
         while bandier is False:
             apellidos = str(input("¿Cuáles son sus apellidos?"))
             if apellidos.isspace() is False:
                 bandier = True
         return apellidos
-    elif option == 3: # cambiar nombre y apellido
+    elif option == 3:  # cambiar nombre y apellido
         while bandier is False:
             nombres = str(input("¿Cuáles son sus nombres?"))
             if nombres.isspace() is False:
@@ -454,7 +458,7 @@ def solicitar_nombre_apellido(option):
         while bandier is False:
             apellidos = str(input("¿Cuáles son sus apellidos?"))
             if apellidos.isspace() is False:
-               bandier = True
+                bandier = True
         return nombres, apellidos
 
 
@@ -476,10 +480,88 @@ def print_tables(query, conn):
     cursor = conn.cursor()
     cursor.execute(query)  # ejecuta el query indicado
     data = cursor.fetchall()
+    if len(data) != 0:
+        colnames = [desc[0] for desc in cursor.description]  # el nombre de las columnas
+        t = PrettyTable(colnames)  # las columnas en la tabla
+        for info in data:
+            t.add_row(info)  # las filas en la tabla
+        print(t)
+    else:
+        print("No hay registros sobre el dato que deseas ver")
+
+
 
     colnames = [desc[0] for desc in cursor.description]  # el nombre de las columnas
     t = PrettyTable(colnames)  # las columnas en la tabla
     for info in data:
         t.add_row(info)  # las filas en la tabla
     print(t)
+
+
+""" solicitar datos para registrar un nuevo trabajador """
+
+
+def solicitar_credenciales(conn, argumento, tipo_trabajador):
+    try:
+        print("\tA continuación se te solicitará información básica para crear el perfil del %s" % argumento)
+        print("\tSI ALGUNO DE LOS DATOS ES INCORRECTO SE TE NOTIFICARÁ")
+        bandier = True
+        nombres, apellidos = solicitar_nombre_apellido(3)
+        correo = str(input("¿Cuál es su correo?"))
+
+        while bandier is True:  # conocer que el correo no esta registrado
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1 FROM trabajador WHERE correo='%s'" % correo)
+            result = cursor.fetchone()
+            if result is None:
+                bandier = False
+            else:
+                correo = str((input("Este correo ya está registrado, intenta con otro")))
+
+        password = solicitar_password()
+        if tipo_trabajador == 1:  # es un entrenador
+            return nombres, apellidos, correo, password, True, 6
+        if tipo_trabajador == 2:  # es un administrador, se debe de mostrar los roles disponibles
+            query = """SELECT cod_rol "ID", tipo_rol "Tipo de rol" FROM tipo_rol WHERE cod_rol BETWEEN 2 and 4 ORDER BY cod_rol ASC;"""
+            tipo_admin = 0
+            while bandier is False:
+                print_tables(query, conn)
+                dat = input("Ingrese el id del tipo de administrador que desea agregar")
+                try:
+                    tipo_admin = int(dat)
+                except ValueError:
+                    print("El dato ingresado no es numerico")
+                if 2 <= tipo_admin <= 4:
+                    bandier = True
+                else:
+                    print("El id ingresado no pertenece a ni un entrenador")
+            return nombres, apellidos, correo, password, True, tipo_admin
+    except ValueError:
+        print("Los datos ingresados no son válidos, tendrá que regresar a esta parte del menú")
+        return False
+
+
+def solicitar_admins(conn, argumento):
+    bandier = False
+    cursor = conn.cursor()
+    cursor.execute("""SELECT id FROM trabajador WHERE rol BETWEEN 2 AND 4 ORDER BY id ASC LIMIT 1;""")
+    menor_valor = cursor.fetchone()[0]
+    cursor.execute("""SELECT id FROM trabajador WHERE rol BETWEEN 2 AND 4 ORDER BY id DESC LIMIT 1;""")
+    mayor_valor = cursor.fetchone()[0]
+
+    ent = 0
+    while bandier is False:
+        dat = input("Ingrese el id del administrador que desea %s" % argumento)
+        try:
+            ent = int(dat)
+        except ValueError:
+            print("El dato ingresado no es numerico")
+        if menor_valor <= ent <= mayor_valor:
+            bandier = True
+        else:
+            print("El id ingresado no pertenece a ni un administrador valido")
+    return ent
+
+
+
 

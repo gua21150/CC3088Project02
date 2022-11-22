@@ -1,37 +1,10 @@
-from Control.validation_request import print_tables, solicitar_nombre_apellido, solicitar_password
-
-""" solicitar datos para registrar un nuevo entrenador """
-
-
-def solicitar_credenciales(conn):
-    try:
-        print("\tA continuación se te solicitará información básica para crear el perfil del entrenador")
-        print("\tSI ALGUNO DE LOS DATOS ES INCORRECTO SE TE NOTIFICARÁ")
-        bandier = True
-        nombres, apellidos = solicitar_nombre_apellido(3)
-        correo = str(input("¿Cuál es su correo?"))
-
-        while bandier is True:  # conocer que el correo no esta registrado
-            cursor = conn.cursor()
-            cursor.execute("SELECT 1 FROM trabajador WHERE correo='%s'" % correo)
-            result = cursor.fetchone()
-            if result is None:
-                bandier = False
-            else:
-                correo = str((input("Este correo ya está registrado, intenta con otro")))
-
-        password = solicitar_password()
-        return nombres, apellidos, correo, password, True, 6
-    except ValueError:
-        print("Los datos ingresados no son válidos, tendrá que regresar a esta parte del menú")
-        return False
-
+from Control.validation_request import print_tables, solicitar_nombre_apellido, solicitar_password, solicitar_credenciales
 
 """" registro del entrenador dentro de la base de datos """
 
 
 def registrar_entrenador(conn, id_admin, rol):
-    data = solicitar_credenciales(conn)  # solicitar informacion usuario
+    data = solicitar_credenciales(conn, "entrenador", 1)  # solicitar informacion usuario
 
     if data is not False:
         cursor = conn.cursor()  # se conecta a la base de datos
