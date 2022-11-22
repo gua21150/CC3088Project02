@@ -38,9 +38,9 @@ CREATE ROLE admin_sesiones;
 ALTER ROLE admin_sesiones WITH LOGIN PASSWORD 'ad_sesion';
     -- permisos de los usuarios
 -- permisos de los usuarios
-GRANT SELECT    ON  trabajador, categoria_ejercicio, sesion_ejercicio
+GRANT SELECT    ON  trabajador, categoria_ejercicio, sesion_ejercicio, usuario, usuario_suscripcion, sincronizacion_ejercicio
                 TO  admin_sesiones;
-GRANT INSERT    ON  bitacora_admin, sesion_ejercicio, trabajador
+GRANT INSERT    ON  bitacora_admin, sesion_ejercicio, trabajador, sincronizacion_ejercicio
                 TO  admin_sesiones;
 GRANT UPDATE    ON  sesion_ejercicio 
                 TO admin_sesiones;
