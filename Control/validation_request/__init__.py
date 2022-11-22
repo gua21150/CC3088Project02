@@ -397,6 +397,42 @@ def solicitar_ritmo_cardiaco_calorias():
     return pul, cal
 
 
+
+def solicitar_hora_sesion_simulacion(argumento, anio_limite):
+    bandier = False
+    anio = ""
+    mes = ""
+    dat = ""
+    while bandier is False:
+        dat = input("Ingrese el año '%s' " % argumento)
+        try:
+            anio = int(dat)
+        except ValueError:
+            print("El dato ingresado no es numerico")
+
+        if 1950 <= anio <= anio_limite:
+            bandier = True
+        else:
+            print("El año '%s', debe de estar entre 1950 a 2022 " % argumento)
+
+    bandier = False
+    while bandier is False:
+        dat = input("Ingrese el mes '%s' " % argumento)
+        try:
+            mes = int(dat)
+        except ValueError:
+            print("El dato ingresado no es numerico")
+
+        if 1 <= mes <= 12:
+            bandier = True
+        else:
+            print("El mes '%s', debe de estar entre 1 a 12 " % argumento)
+            
+    return date(anio, mes)
+
+
+
+
 def solicitar_nombre_apellido(option):
     bandier = False
     nombres = ""
@@ -452,6 +488,14 @@ def print_tables(query, conn):
         print(t)
     else:
         print("No hay registros sobre el dato que deseas ver")
+
+
+
+    colnames = [desc[0] for desc in cursor.description]  # el nombre de las columnas
+    t = PrettyTable(colnames)  # las columnas en la tabla
+    for info in data:
+        t.add_row(info)  # las filas en la tabla
+    print(t)
 
 
 """ solicitar datos para registrar un nuevo trabajador """
@@ -517,3 +561,7 @@ def solicitar_admins(conn, argumento):
         else:
             print("El id ingresado no pertenece a ni un administrador valido")
     return ent
+
+
+
+
